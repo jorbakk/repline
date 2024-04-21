@@ -10,7 +10,7 @@ librepline.a: repline.o
 librepline.so: repline.o
 	$(CC) -shared $(LDFLAGS) -o $@ $<
 
-example: example.c repline.o
+example: example.o repline.o
 	$(CC) -o $@ $^ $(LDFLAGS) 
 
 test_colors: test_colors.c repline.o

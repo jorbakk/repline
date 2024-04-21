@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <locale.h>
+
 #include "repline.h"
 
 // completion function defined below
@@ -55,7 +56,7 @@ int main()
 
   // run until empty input
   char* input;
-  while((input = rpl_readline("isoclinε")) != NULL)    // ctrl-d returns NULL (as well as errors)
+  while((input = rpl_readline("rεpline")) != NULL)    // ctrl-d returns NULL (as well as errors)
   {
     bool stop = (strcmp(input,"exit") == 0 || strcmp(input,"") == 0); 
     rpl_printf("[gray]-----[/]\n"           // echo the input
