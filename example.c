@@ -21,7 +21,7 @@ int main()
 
   // use `rpl_print` functions to use bbcode's for markup
   rpl_style_def("kbd","gray underline");     // you can define your own styles
-  rpl_style_def("ic-prompt","ansi-maroon");  // or re-define system styles
+  rpl_style_def("rpl-prompt","ansi-maroon");  // or re-define system styles
   
   rpl_printf( "[b]Repline[/b] sample program:\n"
               "- Type 'exit' to quit. (or use [kbd]ctrl-d[/]).\n"

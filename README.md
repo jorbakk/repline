@@ -1,6 +1,6 @@
 # Repline - A highly interactive REPL #
 
-Highly interactive REPL for the use in POSIX shells supporting command line editing, history, and command line completion using suggestions.
+Highly interactive REPL primarily for use in operating system shells. It supports command line editing, history, and command line completion using suggestions.
 
 ## Build ##
 

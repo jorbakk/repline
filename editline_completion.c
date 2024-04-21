@@ -40,7 +40,7 @@ static void editor_append_completion(rpl_env_t* env, editor_t* eb, ssize_t idx, 
   const char* display = completions_get_display(env->completions, idx, &help);
   if (display == NULL) return;
   if (numbered) {
-    sbuf_appendf(eb->extra, "[ic-info]%s%zd [/]", (selected ? (tty_is_utf8(env->tty) ? "\xE2\x86\x92" : "*") : " "), 1 + idx);
+    sbuf_appendf(eb->extra, "[rpl-info]%s%zd [/]", (selected ? (tty_is_utf8(env->tty) ? "\xE2\x86\x92" : "*") : " "), 1 + idx);
     width -= 3;
   }
 
@@ -48,13 +48,13 @@ static void editor_append_completion(rpl_env_t* env, editor_t* eb, ssize_t idx, 
     sbuf_appendf(eb->extra, "[width=\"%zd;left; ;on\"]", width );
   }
   if (selected) {
-    sbuf_append(eb->extra, "[ic-emphasis]");
+    sbuf_append(eb->extra, "[rpl-emphasis]");
   }
   sbuf_append(eb->extra, display);
-  if (selected) { sbuf_append(eb->extra,"[/ic-emphasis]"); }
+  if (selected) { sbuf_append(eb->extra,"[/rpl-emphasis]"); }
   if (help != NULL) {
     sbuf_append(eb->extra, "  ");
-    sbuf_append_tagged(eb->extra, "ic-info", help );      
+    sbuf_append_tagged(eb->extra, "rpl-info", help );      
   }
   if (width > 0) { sbuf_append(eb->extra,"[/width]"); }  
 }
@@ -138,10 +138,10 @@ again:
   }
   if (count > count_displayed) {
     if (more_available) {
-      sbuf_append(eb->extra, "\n[ic-info](press page-down (or ctrl-j) to see all further completions)[/]");
+      sbuf_append(eb->extra, "\n[rpl-info](press page-down (or ctrl-j) to see all further completions)[/]");
     }
     else {
-      sbuf_appendf(eb->extra, "\n[ic-info](press page-down (or ctrl-j) to see all %zd completions)[/]", count );
+      sbuf_appendf(eb->extra, "\n[rpl-info](press page-down (or ctrl-j) to see all %zd completions)[/]", count );
     }
   }
   if (!env->complete_nopreview && selected >= 0 && selected <= count_displayed) {
@@ -228,10 +228,10 @@ again:
       }
     }
     if (count >= RPL_MAX_COMPLETIONS_TO_SHOW) {
-      bbcode_println(env->bbcode, "[ic-info]... and more.[/]");
+      bbcode_println(env->bbcode, "[rpl-info]... and more.[/]");
     }
     else {
-      bbcode_printf(env->bbcode, "[ic-info](%zd possible completions)[/]\n", count );
+      bbcode_printf(env->bbcode, "[rpl-info](%zd possible completions)[/]\n", count );
     }
     for(ssize_t i = 0; i < rc.row+1; i++) {
       term_write(env->term, " \n");

@@ -186,7 +186,7 @@ static bool edit_pos_is_at_row_end( rpl_env_t* env, editor_t* eb ) {
 static void edit_write_prompt( rpl_env_t* env, editor_t* eb, ssize_t row, bool in_extra, bool marker_only) {
   if (in_extra) return;
   if (!env->twoline_prompt) marker_only = false;
-  bbcode_style_open(env->bbcode, "ic-prompt");
+  bbcode_style_open(env->bbcode, "rpl-prompt");
   if (!marker_only && row==0) {
     // regular prompt text    
     bbcode_print( env->bbcode, eb->prompt_text );
@@ -248,9 +248,9 @@ static bool edit_refresh_rows_iter(
   if (row < info->last_row) {
     if (is_wrap && tty_is_utf8(info->env->tty)) {       
       #ifndef __APPLE__
-      bbcode_print( info->env->bbcode, "[ic-dim]\xE2\x86\x90");  // left arrow 
+      bbcode_print( info->env->bbcode, "[rpl-dim]\xE2\x86\x90");  // left arrow 
       #else
-      bbcode_print( info->env->bbcode, "[ic-dim]\xE2\x86\xB5" ); // return symbol
+      bbcode_print( info->env->bbcode, "[rpl-dim]\xE2\x86\xB5" ); // return symbol
       #endif
     }
     term_clear_to_end_of_line(term);
@@ -292,7 +292,7 @@ static void edit_refresh(rpl_env_t* env, editor_t* eb)
   // highlight matching braces
   if (eb->attrs != NULL && !env->no_bracematch) {
     highlight_match_braces(sbuf_string(eb->input), eb->attrs, eb->pos, rpl_env_get_match_braces(env),  
-                              bbcode_style(env->bbcode,"ic-bracematch"), bbcode_style(env->bbcode,"ic-error"));
+                              bbcode_style(env->bbcode,"rpl-bracematch"), bbcode_style(env->bbcode,"rpl-error"));
   }
 
   // insert hint  
@@ -303,8 +303,8 @@ static void edit_refresh(rpl_env_t* env, editor_t* eb)
 
   if (sbuf_len(eb->hint) > 0) {
     if (eb->attrs != NULL) {
-      //* attrbuf_insert_at( eb->attrs, eb->pos, sbuf_len(eb->hint), bbcode_style(env->bbcode, "ic-hint") );
-      attrbuf_insert_at(eb->attrs, sbuf_len(eb->input), sbuf_len(eb->hint), bbcode_style(env->bbcode, "ic-hint"));
+      //* attrbuf_insert_at( eb->attrs, eb->pos, sbuf_len(eb->hint), bbcode_style(env->bbcode, "rpl-hint") );
+      attrbuf_insert_at(eb->attrs, sbuf_len(eb->input), sbuf_len(eb->hint), bbcode_style(env->bbcode, "rpl-hint"));
     }
     //* sbuf_insert_at(eb->input, sbuf_string(eb->hint), eb->pos);
 #ifndef INPUT_CPY
@@ -491,9 +491,9 @@ static bool edit_resize(rpl_env_t* env, editor_t* eb ) {
 static void editor_append_hint_help(editor_t* eb, const char* help) {
   sbuf_clear(eb->hint_help);
   if (help != NULL) {
-    sbuf_replace(eb->hint_help, "[ic-info]");
+    sbuf_replace(eb->hint_help, "[rpl-info]");
     sbuf_append(eb->hint_help, help);
-    sbuf_append(eb->hint_help, "[/ic-info]\n");
+    sbuf_append(eb->hint_help, "[/rpl-info]\n");
   }
 }
 
