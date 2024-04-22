@@ -554,7 +554,8 @@ static bool filename_complete_indir( rpl_completion_env_t* cenv, stringbuf_t* di
     do {
       const char* name = os_direntry_name(&entry);
       if (name != NULL && strcmp(name, ".") != 0 && strcmp(name, "..") != 0 && 
-          rpl_istarts_with(name, base_prefix))
+          // rpl_istarts_with(name, base_prefix))
+          rpl_starts_with(name, base_prefix))
       {
         // possible match, first check if it is a directory
         file_type_t ft;

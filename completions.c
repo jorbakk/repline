@@ -257,7 +257,8 @@ rpl_private ssize_t completions_apply_longest_prefix(completions_t* cms, stringb
 
 rpl_public bool rpl_add_completions(rpl_completion_env_t* cenv, const char* prefix, const char** completions) {
   for (const char** pc = completions; *pc != NULL; pc++) {
-    if (rpl_istarts_with(*pc, prefix)) {
+    // if (rpl_istarts_with(*pc, prefix)) {
+    if (rpl_starts_with(*pc, prefix)) {
       if (!rpl_add_completion_ex(cenv, *pc, NULL, NULL)) return false;
     }
   }

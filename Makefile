@@ -17,7 +17,7 @@ test_colors: test_colors.c repline.o
 	$(CC) -o $@ $^ $(LDFLAGS) 
 
 clean:
-	rm -rf repline.o librepline.a librepline.so example test_colors
+	rm -rf *.o librepline.a librepline.so example test_colors
 
 install: all
 	mkdir -p $(DESTDIR)/$(PREFIX)/lib
