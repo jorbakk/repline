@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+/// TODO include header on windows for getting the pid of the process
+#include <unistd.h>
 #include <string.h>  
 #include <sys/stat.h>
 #include <time.h>
@@ -29,8 +31,8 @@ struct history_s {
 };
 
 static const char *db_tables[] = {
-  "create table if not exists cmds (cid integer, ts integer, cmd text)",
-  "create index if not exists cmdididx on cmds(cid, ts)",
+  "create table if not exists cmds (cid integer, ts integer, pid integer, cmd text)",
+  "create index if not exists cmdididx on cmds(cid, ts, pid)",
   NULL
 };
 
@@ -54,11 +56,11 @@ enum db_stmt {
 };
 
 static const struct db_query_t db_queries[] = {
-  { DB_INS_CMD,           "insert into cmds values (?,?,?)" },
+  { DB_INS_CMD,           "insert into cmds values (?,?,?,?)" },
   { DB_MAX_ID_CMD,        "select max(cid) from cmds" },
   { DB_COUNT_CMD,         "select count(cid) from cmds" },
-  { DB_GET_PREF_CNT,      "select count(cid) from cmds where cmd like ?" },
-  { DB_GET_PREF_CMD,      "select cmd from cmds where cmd like ? order by ts desc, cid desc limit 1 offset ?" },
+  { DB_GET_PREF_CNT,      "select count(cid) from cmds where cmd like ? and pid = ?" },
+  { DB_GET_PREF_CMD,      "select cmd from cmds where cmd like ? and pid = ? order by ts desc, cid desc limit 1 offset ?" },
   { DB_GET_CMD_ID,        "select cid from cmds where cmd = ? limit 1" },
   { DB_DEL_CMD_ID,        "delete from cmds where cid = ?" },
   { DB_DEL_ALL,           "delete from cmds" },
@@ -197,6 +199,7 @@ rpl_private ssize_t history_count_with_prefix(const history_t* h, const char *pr
   char *prefix_param = mem_malloc(h->mem, rpl_strlen(prefix) + 3);
   sprintf(prefix_param, "%s%%", prefix);
   db_in_txt(&h->db, DB_GET_PREF_CNT, 1, prefix_param);
+  db_in_int(&h->db, DB_GET_PREF_CNT, 2, getpid());
   db_exec(&h->db, DB_GET_PREF_CNT);
   int count = db_out_int(&h->db, DB_GET_PREF_CNT, 1);
   db_reset(&h->db, DB_GET_PREF_CNT);
@@ -241,7 +244,8 @@ rpl_private bool history_push( history_t* h, const char* entry ) {
 
   db_in_int(&h->db, DB_INS_CMD, 1, new_cid);
   db_in_int(&h->db, DB_INS_CMD, 2, get_current_ts());
-  db_in_txt(&h->db, DB_INS_CMD, 3, entry);
+  db_in_int(&h->db, DB_INS_CMD, 3, getpid());
+  db_in_txt(&h->db, DB_INS_CMD, 4, entry);
   db_exec(&h->db, DB_INS_CMD);
   db_reset(&h->db, DB_INS_CMD);
   return true;
@@ -269,12 +273,14 @@ rpl_private const char* history_get_with_prefix( const history_t* h, ssize_t n, 
   char *prefix_param = mem_malloc(h->mem, rpl_strlen(prefix) + 3);
   sprintf(prefix_param, "%s%%", prefix);
   db_in_txt(&h->db, DB_GET_PREF_CNT, 1, prefix_param);
+  db_in_int(&h->db, DB_GET_PREF_CNT, 2, getpid());
   db_exec(&h->db, DB_GET_PREF_CNT);
   int cnt = db_out_int(&h->db, DB_GET_PREF_CNT, 1);
   db_reset(&h->db, DB_GET_PREF_CNT);
   if (n < 0 || n > cnt) return NULL;
   db_in_txt(&h->db, DB_GET_PREF_CMD, 1, prefix_param);
-  db_in_int(&h->db, DB_GET_PREF_CMD, 2, n - 1);
+  db_in_int(&h->db, DB_GET_PREF_CMD, 2, getpid());
+  db_in_int(&h->db, DB_GET_PREF_CMD, 3, n - 1);
   int ret = db_exec(&h->db, DB_GET_PREF_CMD);
   if (ret != DB_ROW) return NULL;
   const char* entry = mem_strdup(h->mem, (const char*)db_out_txt(&h->db, DB_GET_PREF_CMD, 1));

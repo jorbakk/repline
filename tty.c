@@ -28,9 +28,11 @@ WINBASEAPI ULONGLONG WINAPI GetTickCount64(VOID);
 #endif
 
 #define TTY_PUSH_MAX (32)
+#define TTY_NAME_MAXLEN (32)
 
 struct tty_s {
   int       fd_in;                  // input handle
+  char      name[TTY_NAME_MAXLEN];  // tty name
   bool      raw_enabled;            // is raw mode enabled?
   bool      is_utf8;                // is the input stream in utf-8 mode?
   bool      has_term_resize_event;  // are resize events generated?
@@ -401,6 +403,8 @@ rpl_private tty_t* tty_new(alloc_t* mem, int fd_in)
     tty_free(tty);
     return NULL;
   }
+  ttyname_r(tty->fd_in, tty->name, TTY_NAME_MAXLEN);
+  debug_msg("tty name: %s, pid: %d\n", tty->name, getpid());
   return tty;
 }
 
