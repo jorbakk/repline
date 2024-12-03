@@ -51,6 +51,9 @@ int main()
   // inline hinting is enabled by default
   // rpl_enable_hint(false);
 
+  /// Disable insertion of braces
+  rpl_enable_brace_insertion(false);
+
   // enable printing prompt and marker on separate lines
   rpl_enable_twoline_prompt(true);
 
@@ -65,6 +68,7 @@ int main()
     free(input);               // do not forget to free the returned input!
     if (stop) break;
   }
+  rpl_history_close();
   rpl_println("done");
   return 0;
 }

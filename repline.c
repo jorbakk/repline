@@ -223,6 +223,11 @@ rpl_public void rpl_history_clear(void) {
   history_clear(env->history);
 }
 
+rpl_public void rpl_history_close(void) {
+  rpl_env_t* env = rpl_get_env(); if (env==NULL) return;
+  history_close(env->history);
+}
+
 rpl_public bool rpl_enable_auto_tab( bool enable ) {
   rpl_env_t* env = rpl_get_env(); if (env==NULL) return false;
   bool prev = env->complete_autotab;

@@ -134,6 +134,8 @@ void rpl_history_clear(void);
 /// Add an entry to the history
 void rpl_history_add( const char* entry );
 
+void rpl_history_close();
+
 /// \}
 
 //--------------------------------------------------------------

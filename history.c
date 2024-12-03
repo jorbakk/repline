@@ -123,6 +123,10 @@ rpl_private void history_clear(history_t* h) {
   history_remove_last_n( h, h->count );
 }
 
+rpl_private void history_close(history_t* h) {
+  /// Nothing to be done here ...
+}
+
 rpl_private const char* history_get( const history_t* h, ssize_t n ) {
   if (n < 0 || n >= h->count) return NULL;
   return h->elems[h->count - n - 1];

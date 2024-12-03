@@ -48,10 +48,12 @@ enum db_stmt {
   DB_COUNT_CMD,
   DB_GET_PREF_CNT,
   DB_GET_PREF_CMD,
+  DB_GET_DBL_PIDS,
   DB_GET_CMD_ID,
   DB_DEL_CMD_ID,
   DB_DEL_ALL,
   DB_UPD_TS,
+  DB_SET_PID_NULL,
   DB_STMT_CNT,
 };
 
@@ -59,12 +61,14 @@ static const struct db_query_t db_queries[] = {
   { DB_INS_CMD,           "insert into cmds values (?,?,?,?)" },
   { DB_MAX_ID_CMD,        "select max(cid) from cmds" },
   { DB_COUNT_CMD,         "select count(cid) from cmds" },
-  { DB_GET_PREF_CNT,      "select count(cid) from cmds where cmd like ? and pid = ?" },
-  { DB_GET_PREF_CMD,      "select cmd from cmds where cmd like ? and pid = ? order by ts desc, cid desc limit 1 offset ?" },
-  { DB_GET_CMD_ID,        "select cid from cmds where cmd = ? limit 1" },
+  { DB_GET_PREF_CNT,      "select count(cid) from cmds where cmd like ? and (pid = ? or pid is NULL)" },
+  { DB_GET_PREF_CMD,      "select cmd from cmds where cmd like ? and (pid = ? or pid is NULL) order by pid desc, ts desc, cid desc limit 1 offset ?" },
+  { DB_GET_DBL_PIDS,      "select cpid.cid, cpid.ts, cnull.cid, cnull.ts from cmds as cpid, cmds as cnull where cpid.pid = ? and cnull.pid is NULL and cpid.cmd = cnull.cmd" },
+  { DB_GET_CMD_ID,        "select cid, pid from cmds where cmd = ? limit 1" },
   { DB_DEL_CMD_ID,        "delete from cmds where cid = ?" },
   { DB_DEL_ALL,           "delete from cmds" },
   { DB_UPD_TS,            "update cmds set ts = ? where cid = ?" },
+  { DB_SET_PID_NULL,      "update cmds set pid = NULL where pid = ?" },
   { DB_STMT_CNT,          "" },
 };
 
@@ -224,11 +228,15 @@ rpl_private bool history_push( history_t* h, const char* entry ) {
   if (!h->allow_duplicates) {
     db_in_txt(&h->db, DB_GET_CMD_ID, 1, entry);
     int cid = -1;
+    int pid = -1;
     if (db_exec(&h->db, DB_GET_CMD_ID) == DB_ROW) {;
         cid = db_out_int(&h->db, DB_GET_CMD_ID, 1);
+        pid = db_out_int(&h->db, DB_GET_CMD_ID, 2);
     }
     db_reset(&h->db, DB_GET_CMD_ID);
-    if (cid != -1) {
+    /// Update timestamp only if the command is entered by the same process
+    /// ... otherwise, time stamps will be updated on history_close()
+    if (cid != -1 && pid != 0) {
       debug_msg("duplicate entry: %s\n", entry);
       db_in_int(&h->db, DB_UPD_TS, 1, get_current_ts());
       db_in_int(&h->db, DB_UPD_TS, 2, cid);
@@ -264,6 +272,33 @@ rpl_private void history_remove_last(history_t* h) {
 rpl_private void history_clear(history_t* h) {
   db_exec(&h->db, DB_DEL_ALL);
   db_reset(&h->db, DB_DEL_ALL);
+}
+
+rpl_private void history_close(history_t* h) {
+  /// Get all double entries with pid == NULL and pid == getpid()
+  /// FIXME this only works with allow_duplicates disabled: one entry for cp.cid and cn.cid
+  db_in_int(&h->db, DB_GET_DBL_PIDS, 1, getpid());
+  while (db_exec(&h->db, DB_GET_DBL_PIDS) == DB_ROW) {
+    int cpid_cid = db_out_int(&h->db, DB_GET_DBL_PIDS, 1);
+    unsigned int cpid_ts = db_out_int(&h->db, DB_GET_DBL_PIDS, 2);
+    int cnull_cid = db_out_int(&h->db, DB_GET_DBL_PIDS, 3);
+    unsigned int cnull_ts = db_out_int(&h->db, DB_GET_DBL_PIDS, 4);
+    debug_msg("merge double entry cid: %d, ts: %d with cid: %d, ts: %d\n",
+      cpid_cid, cpid_ts, cnull_cid, cnull_ts);
+    int max_ts = cpid_ts > cnull_ts ? cpid_ts : cnull_ts;
+    db_in_int(&h->db, DB_UPD_TS, 1, max_ts);
+    db_in_int(&h->db, DB_UPD_TS, 2, cnull_cid);
+    db_exec(&h->db, DB_UPD_TS);
+    db_reset(&h->db, DB_UPD_TS);
+    db_in_int(&h->db, DB_DEL_CMD_ID, 1, cpid_cid);
+    db_exec(&h->db, DB_DEL_CMD_ID);
+    db_reset(&h->db, DB_DEL_CMD_ID);
+  }
+  db_reset(&h->db, DB_GET_DBL_PIDS);
+  /// Set pid of history of the current process to NULL
+  db_in_int(&h->db, DB_SET_PID_NULL, 1, getpid());
+  db_exec(&h->db, DB_SET_PID_NULL);
+  db_reset(&h->db, DB_SET_PID_NULL);
 }
 
 /// Parameter n is the history command index from latest to oldest, starting with 1
