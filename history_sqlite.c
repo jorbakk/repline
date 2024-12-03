@@ -46,6 +46,8 @@ enum db_stmt {
   DB_INS_CMD,
   DB_MAX_ID_CMD,
   DB_COUNT_CMD,
+  DB_GET_PREV_CNT,
+  DB_GET_PREV_CMD,
   DB_GET_PREF_CNT,
   DB_GET_PREF_CMD,
   DB_GET_DBL_PIDS,
@@ -61,8 +63,10 @@ static const struct db_query_t db_queries[] = {
   { DB_INS_CMD,           "insert into cmds values (?,?,?,?)" },
   { DB_MAX_ID_CMD,        "select max(cid) from cmds" },
   { DB_COUNT_CMD,         "select count(cid) from cmds" },
-  { DB_GET_PREF_CNT,      "select count(cid) from cmds where cmd like ? and (pid = ? or pid is NULL)" },
-  { DB_GET_PREF_CMD,      "select cmd from cmds where cmd like ? and (pid = ? or pid is NULL) order by pid desc, ts desc, cid desc limit 1 offset ?" },
+  { DB_GET_PREV_CNT,      "select count(cid) from cmds where cmd like ? and (pid = ? or pid is NULL)" },
+  { DB_GET_PREV_CMD,      "select cmd from cmds where cmd like ? and (pid = ? or pid is NULL) order by pid desc, ts desc, cid desc limit 1 offset ?" },
+  { DB_GET_PREF_CNT,      "select count(cid) from cmds where cmd like ?" },
+  { DB_GET_PREF_CMD,      "select cmd from cmds where cmd like ? order by ts desc, cid desc limit 1 offset ?" },
   { DB_GET_DBL_PIDS,      "select cpid.cid, cpid.ts, cnull.cid, cnull.ts from cmds as cpid, cmds as cnull where cpid.pid = ? and cnull.pid is NULL and cpid.cmd = cnull.cmd" },
   { DB_GET_CMD_ID,        "select cid, pid from cmds where cmd = ? limit 1" },
   { DB_DEL_CMD_ID,        "delete from cmds where cid = ?" },
@@ -200,10 +204,17 @@ rpl_private bool history_enable_duplicates(history_t* h, bool enable) {
 }
 
 rpl_private ssize_t history_count_with_prefix(const history_t* h, const char *prefix) {
+  if (strlen(prefix) == 0) {
+    db_in_txt(&h->db, DB_GET_PREV_CNT, 1, "%");
+    db_in_int(&h->db, DB_GET_PREV_CNT, 2, getpid());
+    db_exec(&h->db, DB_GET_PREV_CNT);
+    int count = db_out_int(&h->db, DB_GET_PREV_CNT, 1);
+    db_reset(&h->db, DB_GET_PREV_CNT);
+    return count;
+  }
   char *prefix_param = mem_malloc(h->mem, rpl_strlen(prefix) + 3);
   sprintf(prefix_param, "%s%%", prefix);
   db_in_txt(&h->db, DB_GET_PREF_CNT, 1, prefix_param);
-  db_in_int(&h->db, DB_GET_PREF_CNT, 2, getpid());
   db_exec(&h->db, DB_GET_PREF_CNT);
   int count = db_out_int(&h->db, DB_GET_PREF_CNT, 1);
   db_reset(&h->db, DB_GET_PREF_CNT);
@@ -305,17 +316,31 @@ rpl_private void history_close(history_t* h) {
 /// NOTE need to free the returned string at the callsite with this backend
 rpl_private const char* history_get_with_prefix( const history_t* h, ssize_t n, const char* prefix ) {
   if (n <= 0) return NULL;
+  if (strlen(prefix) == 0) {
+    db_in_txt(&h->db, DB_GET_PREV_CNT, 1, "%");
+    db_in_int(&h->db, DB_GET_PREV_CNT, 2, getpid());
+    db_exec(&h->db, DB_GET_PREV_CNT);
+    int cnt = db_out_int(&h->db, DB_GET_PREV_CNT, 1);
+    db_reset(&h->db, DB_GET_PREV_CNT);
+    if (n < 0 || n > cnt) return NULL;
+    db_in_txt(&h->db, DB_GET_PREV_CMD, 1, "%");
+    db_in_int(&h->db, DB_GET_PREV_CMD, 2, getpid());
+    db_in_int(&h->db, DB_GET_PREV_CMD, 3, n - 1);
+    int ret = db_exec(&h->db, DB_GET_PREV_CMD);
+    if (ret != DB_ROW) return NULL;
+    const char* entry = mem_strdup(h->mem, (const char*)db_out_txt(&h->db, DB_GET_PREV_CMD, 1));
+    db_reset(&h->db, DB_GET_PREV_CMD);
+    return entry;
+  }
   char *prefix_param = mem_malloc(h->mem, rpl_strlen(prefix) + 3);
   sprintf(prefix_param, "%s%%", prefix);
   db_in_txt(&h->db, DB_GET_PREF_CNT, 1, prefix_param);
-  db_in_int(&h->db, DB_GET_PREF_CNT, 2, getpid());
   db_exec(&h->db, DB_GET_PREF_CNT);
   int cnt = db_out_int(&h->db, DB_GET_PREF_CNT, 1);
   db_reset(&h->db, DB_GET_PREF_CNT);
   if (n < 0 || n > cnt) return NULL;
   db_in_txt(&h->db, DB_GET_PREF_CMD, 1, prefix_param);
-  db_in_int(&h->db, DB_GET_PREF_CMD, 2, getpid());
-  db_in_int(&h->db, DB_GET_PREF_CMD, 3, n - 1);
+  db_in_int(&h->db, DB_GET_PREF_CMD, 2, n - 1);
   int ret = db_exec(&h->db, DB_GET_PREF_CMD);
   if (ret != DB_ROW) return NULL;
   const char* entry = mem_strdup(h->mem, (const char*)db_out_txt(&h->db, DB_GET_PREF_CMD, 1));
