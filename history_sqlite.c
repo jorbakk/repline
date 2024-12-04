@@ -33,6 +33,7 @@ struct history_s {
 static const char *db_tables[] = {
   "create table if not exists cmds (cid integer, ts integer, pid integer, cmd text)",
   "create index if not exists cmdididx on cmds(cid, ts, pid)",
+  "create index if not exists cmdtxtidx on cmds(pid, cmd)",
   NULL
 };
 
