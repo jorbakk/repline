@@ -356,9 +356,9 @@ tty_read_csi(tty_t * tty, uint8_t c1, uint8_t peek, code_t mods0,
 	          (special == 0 ? '_' : special), num1, num2, final);
 
 	// Adjust special cases into standard ones.
-	if ((final == '@' || final == '9') && c1 == '[' && num1 == 1) {
+	if ((final == '@' || final == '9' || final =='P') && c1 == '[' && num1 == 1) {
 		// ESC [ @, ESC [ 9  : on Mach
-		if (final == '@')
+		if (final == '@' || final =='P')
 			num1 = 3;           // DEL
 		else if (final == '9')
 			num1 = 2;           // INS 
