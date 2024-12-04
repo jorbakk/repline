@@ -6,11 +6,10 @@
 extern "C" {
 #endif
 
-#include <stddef.h>    // size_t
-#include <stdbool.h>   // bool
-#include <stdint.h>    // uint32_t
-#include <stdarg.h>    // term_vprintf
-
+#include <stddef.h>             // size_t
+#include <stdbool.h>            // bool
+#include <stdint.h>             // uint32_t
+#include <stdarg.h>             // term_vprintf
 
 /*! \mainpage
 Repline C API reference.
@@ -39,8 +38,7 @@ Contents:
 /// \{
 
 /// Repline version: 102 = 1.0.2.
-#define RPL_VERSION   (104)  
-
+#define RPL_VERSION   (104)
 
 /// Read input from the user using rich editing abilities.
 /// @param prompt_text   The prompt text, can be NULL for the default (""). 
@@ -55,10 +53,9 @@ Contents:
 /// See also \a rpl_set_prompt_marker(), \a rpl_style_def()
 ///
 /// @see rpl_set_prompt_marker(), rpl_style_def()
-char* rpl_readline(const char* prompt_text);   
+	char *rpl_readline(const char *prompt_text);
 
 /// \}
-
 
 //--------------------------------------------------------------
 /// \defgroup bbcode Formatted Text
@@ -83,35 +80,34 @@ char* rpl_readline(const char* prompt_text);
 ///   the `b`, `i`, `u`, and `r` styles for bold, italic, underline, and reverse.
 /// 
 /// See [here](https://github.com/jorbakk/repline#bbcode-format) for a description of the full bbcode format.
-void rpl_print( const char* s );
+	void rpl_print(const char *s);
 
 /// Print with bbcode markup ending with a newline.
 /// @see rpl_print()
-void rpl_println( const char* s );
+	void rpl_println(const char *s);
 
 /// Print formatted with bbcode markup.
 /// @see rpl_print()
-void rpl_printf(const char* fmt, ...);
+	void rpl_printf(const char *fmt, ...);
 
 /// Print formatted with bbcode markup.
 /// @see rpl_print
-void rpl_vprintf(const char* fmt, va_list args);
+	void rpl_vprintf(const char *fmt, va_list args);
 
 /// Define or redefine a style.
 /// @param style_name The name of the style. 
 /// @param fmt        The `fmt` string is the content of a tag and can contain
 ///   other styles. This is very useful to theme the output of a program
 ///   by assigning standard styles like `em` or `warning` etc.
-void rpl_style_def( const char* style_name, const char* fmt );
+	void rpl_style_def(const char *style_name, const char *fmt);
 
 /// Start a global style that is only reset when calling a matching rpl_style_close().
-void rpl_style_open( const char* fmt );
+	void rpl_style_open(const char *fmt);
 
 /// End a global style.
-void rpl_style_close(void);
+	void rpl_style_close(void);
 
 /// \}
-
 
 //--------------------------------------------------------------
 // History
@@ -122,19 +118,19 @@ void rpl_style_close(void);
 
 /// Enable history. 
 /// Use a \a NULL filename to not persist the history. Use -1 for max_entries to get the default (200).
-void rpl_set_history(const char* fname, long max_entries );
+	void rpl_set_history(const char *fname, long max_entries);
 
 /// Remove the last entry in the history. 
 /// The last returned input from rpl_readline() is automatically added to the history; this function removes it.
-void rpl_history_remove_last(void);
+	void rpl_history_remove_last(void);
 
 /// Clear the history.
-void rpl_history_clear(void);
+	void rpl_history_clear(void);
 
 /// Add an entry to the history
-void rpl_history_add( const char* entry );
+	void rpl_history_add(const char *entry);
 
-void rpl_history_close();
+	void rpl_history_close();
 
 /// \}
 
@@ -147,10 +143,10 @@ void rpl_history_close();
 /// \{
 
 /// A completion environment
-struct rpl_completion_env_s;
+	struct rpl_completion_env_s;
 
 /// A completion environment
-typedef struct rpl_completion_env_s rpl_completion_env_t;
+	typedef struct rpl_completion_env_s rpl_completion_env_t;
 
 /// A completion callback that is called by repline when tab is pressed.
 /// It is passed a completion environment (containing the current input and the current cursor position), 
@@ -158,22 +154,23 @@ typedef struct rpl_completion_env_s rpl_completion_env_t;
 /// and the user given argument when the callback was set.
 /// When using completion transformers, like `rpl_complete_quoted_word` the `prefix` contains the
 /// the word to be completed without escape characters or quotes.
-typedef void (rpl_completer_fun_t)(rpl_completion_env_t* cenv, const char* prefix );
+	typedef void (rpl_completer_fun_t) (rpl_completion_env_t * cenv,
+	                                    const char *prefix);
 
 /// Set the default completion handler.
 /// @param completer  The completion function
 /// @param arg        Argument passed to the \a completer.
 /// There can only be one default completion function, setting it again disables the previous one.
 /// The initial completer use `rpl_complete_filename`.
-void rpl_set_default_completer( rpl_completer_fun_t* completer, void* arg);
-
+	void rpl_set_default_completer(rpl_completer_fun_t * completer, void *arg);
 
 /// In a completion callback (usually from rpl_complete_word()), use this function to add a completion.
 /// (the completion string is copied by repline and do not need to be preserved or allocated).
 ///
 /// Returns `true` if the callback should continue trying to find more possible completions.
 /// If `false` is returned, the callback should try to return and not add more completions (for improved latency).
-bool rpl_add_completion(rpl_completion_env_t* cenv, const char* completion);
+	bool rpl_add_completion(rpl_completion_env_t * cenv,
+	                        const char *completion);
 
 /// In a completion callback (usually from rpl_complete_word()), use this function to add a completion.
 /// The `display` is used to display the completion in the completion menu, and `help` is
@@ -182,7 +179,9 @@ bool rpl_add_completion(rpl_completion_env_t* cenv, const char* completion);
 ///
 /// Returns `true` if the callback should continue trying to find more possible completions.
 /// If `false` is returned, the callback should try to return and not add more completions (for improved latency).
-bool rpl_add_completion_ex( rpl_completion_env_t* cenv, const char* completion, const char* display, const char* help );
+	bool rpl_add_completion_ex(rpl_completion_env_t * cenv,
+	                           const char *completion, const char *display,
+	                           const char *help);
 
 /// In a completion callback (usually from rpl_complete_word()), use this function to add completions.
 /// The `completions` array should be terminated with a NULL element, and all elements
@@ -190,7 +189,8 @@ bool rpl_add_completion_ex( rpl_completion_env_t* cenv, const char* completion, 
 ///
 /// Returns `true` if the callback should continue trying to find more possible completions.
 /// If `false` is returned, the callback should try to return and not add more completions (for improved latency).
-bool rpl_add_completions(rpl_completion_env_t* cenv, const char* prefix, const char** completions);
+	bool rpl_add_completions(rpl_completion_env_t * cenv, const char *prefix,
+	                         const char **completions);
 
 /// Complete a filename.
 /// Complete a filename given a semi-colon separated list of root directories `roots` and 
@@ -206,14 +206,13 @@ bool rpl_add_completions(rpl_completion_env_t* cenv, const char* prefix, const c
 /// /home/.ba   --> /home/.bashrc
 /// ```
 /// (This already uses rpl_complete_quoted_word() so do not call it from inside a word handler).
-void rpl_complete_filename( rpl_completion_env_t* cenv, const char* prefix, char dir_separator, const char* roots, const char* extensions );
-
-
+	void rpl_complete_filename(rpl_completion_env_t * cenv, const char *prefix,
+	                           char dir_separator, const char *roots,
+	                           const char *extensions);
 
 /// Function that returns whether a (utf8) character (of length `len`) is in a certain character class
 /// @see rpl_char_is_separator() etc.
-typedef bool (rpl_is_char_class_fun_t)(const char* s, long len);
-
+	typedef bool (rpl_is_char_class_fun_t) (const char *s, long len);
 
 /// Complete a _word_ (i.e. _token_). 
 /// Calls the user provided function `fun` to complete on the
@@ -224,8 +223,9 @@ typedef bool (rpl_is_char_class_fun_t)(const char* s, long len);
 /// For example, on the input "hello w", a the user `fun` only gets `w` and can just complete
 /// with "world" resulting in "hello world" without needing to consider `delete_before` etc.
 /// @see rpl_complete_qword() for completing quoted and escaped tokens.
-void rpl_complete_word(rpl_completion_env_t* cenv, const char* prefix, rpl_completer_fun_t* fun, rpl_is_char_class_fun_t* is_word_char);
-
+	void rpl_complete_word(rpl_completion_env_t * cenv, const char *prefix,
+	                       rpl_completer_fun_t * fun,
+	                       rpl_is_char_class_fun_t * is_word_char);
 
 /// Complete a quoted _word_. 
 /// Calls the user provided function `fun` to complete while taking
@@ -244,9 +244,9 @@ void rpl_complete_word(rpl_completion_env_t* cenv, const char* prefix, rpl_compl
 /// with proper quotes and escapes.
 /// If `is_word_char` is NULL, the default `&rpl_char_is_nonseparator` is used. 
 /// @see rpl_complete_quoted_word() to customize the word boundary, quotes etc.
-void rpl_complete_qword( rpl_completion_env_t* cenv, const char* prefix, rpl_completer_fun_t* fun, rpl_is_char_class_fun_t* is_word_char );
-
-
+	void rpl_complete_qword(rpl_completion_env_t * cenv, const char *prefix,
+	                        rpl_completer_fun_t * fun,
+	                        rpl_is_char_class_fun_t * is_word_char);
 
 /// Complete a _word_. 
 /// Calls the user provided function `fun` to complete while taking
@@ -255,8 +255,10 @@ void rpl_complete_qword( rpl_completion_env_t* cenv, const char* prefix, rpl_com
 /// The `escape_char` is the escaping character, usually `\` but use 0 to not have escape characters.
 /// The `quote_chars` define the quotes, use NULL for the default `"\'\""` quotes.
 /// @see rpl_complete_word() which uses the default values for `non_word_chars`, `quote_chars` and `\` for escape characters.
-void rpl_complete_qword_ex( rpl_completion_env_t* cenv, const char* prefix, rpl_completer_fun_t fun, 
-                                rpl_is_char_class_fun_t* is_word_char, char escape_char, const char* quote_chars );
+	void rpl_complete_qword_ex(rpl_completion_env_t * cenv, const char *prefix,
+	                           rpl_completer_fun_t fun,
+	                           rpl_is_char_class_fun_t * is_word_char,
+	                           char escape_char, const char *quote_chars);
 
 /// \}
 
@@ -266,28 +268,32 @@ void rpl_complete_qword_ex( rpl_completion_env_t* cenv, const char* prefix, rpl_
 /// \{
 
 /// A syntax highlight environment
-struct rpl_highlight_env_s;
-typedef struct rpl_highlight_env_s rpl_highlight_env_t;
+	struct rpl_highlight_env_s;
+	typedef struct rpl_highlight_env_s rpl_highlight_env_t;
 
 /// A syntax highlighter callback that is called by readline to syntax highlight user input.
-typedef void (rpl_highlight_fun_t)(rpl_highlight_env_t* henv, const char* input, void* arg);
+	typedef void (rpl_highlight_fun_t) (rpl_highlight_env_t * henv,
+	                                    const char *input, void *arg);
 
 /// Set a syntax highlighter.
 /// There can only be one highlight function, setting it again disables the previous one.
-void rpl_set_default_highlighter(rpl_highlight_fun_t* highlighter, void* arg);
+	void rpl_set_default_highlighter(rpl_highlight_fun_t * highlighter,
+	                                 void *arg);
 
 /// Set the style of characters starting at position `pos`.
-void rpl_highlight(rpl_highlight_env_t* henv, long pos, long count, const char* style );
+	void rpl_highlight(rpl_highlight_env_t * henv, long pos, long count,
+	                   const char *style);
 
 /// Experimental: Convenience callback for a function that highlights `s` using bbcode's.
 /// The returned string should be allocated and is free'd by the caller.
-typedef char* (rpl_highlight_format_fun_t)(const char* s, void* arg);
+	typedef char *(rpl_highlight_format_fun_t) (const char *s, void *arg);
 
 /// Experimental: Convenience function for highlighting with bbcodes.
 /// Can be called in a `rpl_highlight_fun_t` callback to colorize the `input` using the 
 /// the provided `formatted` input that is the styled `input` with bbcodes. The 
 /// content of `formatted` without bbcode tags should match `input` exactly.
-void rpl_highlight_formatted(rpl_highlight_env_t* henv, const char* input, const char* formatted);
+	void rpl_highlight_formatted(rpl_highlight_env_t * henv, const char *input,
+	                             const char *formatted);
 
 /// \}
 
@@ -302,11 +308,12 @@ void rpl_highlight_formatted(rpl_highlight_env_t* henv, const char* input, const
 /// using a particular completion function and highlighter for this call only.
 /// both can be NULL in which case the defaults are used.
 /// @see rpl_readline(), rpl_set_prompt_marker(), rpl_set_default_completer(), rpl_set_default_highlighter().
-char* rpl_readline_ex(const char* prompt_text, rpl_completer_fun_t* completer, void* completer_arg,
-                                              rpl_highlight_fun_t* highlighter, void* highlighter_arg);
+	char *rpl_readline_ex(const char *prompt_text,
+	                      rpl_completer_fun_t * completer, void *completer_arg,
+	                      rpl_highlight_fun_t * highlighter,
+	                      void *highlighter_arg);
 
 /// \}
-
 
 //--------------------------------------------------------------
 // Options
@@ -318,89 +325,88 @@ char* rpl_readline_ex(const char* prompt_text, rpl_completer_fun_t* completer, v
 /// Set a prompt marker and a potential marker for extra lines with multiline input. 
 /// Pass \a NULL for the `prompt_marker` for the default marker (`"> "`).
 /// Pass \a NULL for continuation prompt marker to make it equal to the `prompt_marker`.
-void rpl_set_prompt_marker( const char* prompt_marker, const char* continuation_prompt_marker );
+	void rpl_set_prompt_marker(const char *prompt_marker,
+	                           const char *continuation_prompt_marker);
 
 /// Get the current prompt marker.
-const char* rpl_get_prompt_marker(void);
+	const char *rpl_get_prompt_marker(void);
 
 /// Get the current continuation prompt marker.
-const char* rpl_get_continuation_prompt_marker(void);
+	const char *rpl_get_continuation_prompt_marker(void);
 
 /// Disable or enable printing marker on a separate line (disabled by default).
 /// Returns the previous setting.
-bool rpl_enable_twoline_prompt(bool enable);
+	bool rpl_enable_twoline_prompt(bool enable);
 
 /// Disable or enable multi-line input (enabled by default).
 /// Returns the previous setting.
-bool rpl_enable_multiline( bool enable );
+	bool rpl_enable_multiline(bool enable);
 
 /// Disable or enable sound (enabled by default).
 /// A beep is used when tab cannot find any completion for example.
 /// Returns the previous setting.
-bool rpl_enable_beep( bool enable );
+	bool rpl_enable_beep(bool enable);
 
 /// Disable or enable color output (enabled by default).
 /// Returns the previous setting.
-bool rpl_enable_color( bool enable );
+	bool rpl_enable_color(bool enable);
 
 /// Disable or enable duplicate entries in the history (disabled by default).
 /// Returns the previous setting.
-bool rpl_enable_history_duplicates( bool enable );
+	bool rpl_enable_history_duplicates(bool enable);
 
 /// Disable or enable automatic tab completion after a completion 
 /// to expand as far as possible if the completions are unique. (disabled by default).
 /// Returns the previous setting.
-bool rpl_enable_auto_tab( bool enable );
+	bool rpl_enable_auto_tab(bool enable);
 
 /// Disable or enable preview of a completion selection (enabled by default)
 /// Returns the previous setting.
-bool rpl_enable_completion_preview( bool enable );
+	bool rpl_enable_completion_preview(bool enable);
 
 /// Disable or enable automatic identation of continuation lines in multiline
 /// input so it aligns with the initial prompt.
 /// Returns the previous setting.
-bool rpl_enable_multiline_indent(bool enable);
+	bool rpl_enable_multiline_indent(bool enable);
 
 /// Disable or enable display of short help messages for history search etc.
 /// (full help is always dispayed when pressing F1 regardless of this setting)
 /// @returns the previous setting.
-bool rpl_enable_inline_help(bool enable);
+	bool rpl_enable_inline_help(bool enable);
 
 /// Disable or enable hinting (enabled by default)
 /// Shows a hint inline when there is a single possible completion.
 /// @returns the previous setting.
-bool rpl_enable_hint(bool enable);
+	bool rpl_enable_hint(bool enable);
 
 /// Set millisecond delay before a hint is displayed. Can be zero. (500ms by default).
-long rpl_set_hint_delay(long delay_ms);
+	long rpl_set_hint_delay(long delay_ms);
 
 /// Disable or enable syntax highlighting (enabled by default).
 /// This applies regardless whether a syntax highlighter callback was set (`rpl_set_highlighter`)
 /// Returns the previous setting.
-bool rpl_enable_highlight(bool enable);
-
+	bool rpl_enable_highlight(bool enable);
 
 /// Set millisecond delay for reading escape sequences in order to distinguish
 /// a lone ESC from the start of a escape sequence. The defaults are 100ms and 10ms, 
 /// but it may be increased if working with very slow terminals.
-void rpl_set_tty_esc_delay(long initial_delay_ms, long followup_delay_ms);
+	void rpl_set_tty_esc_delay(long initial_delay_ms, long followup_delay_ms);
 
 /// Enable highlighting of matching braces (and error highlight unmatched braces).`
-bool rpl_enable_brace_matching(bool enable);
+	bool rpl_enable_brace_matching(bool enable);
 
 /// Set matching brace pairs.
 /// Pass \a NULL for the default `"()[]{}"`.
-void rpl_set_matching_braces(const char* brace_pairs);
+	void rpl_set_matching_braces(const char *brace_pairs);
 
 /// Enable automatic brace insertion (enabled by default).
-bool rpl_enable_brace_insertion(bool enable);
+	bool rpl_enable_brace_insertion(bool enable);
 
 /// Set matching brace pairs for automatic insertion.
 /// Pass \a NULL for the default `()[]{}\"\"''`
-void rpl_set_insertion_braces(const char* brace_pairs);
+	void rpl_set_insertion_braces(const char *brace_pairs);
 
 /// \}
-
 
 //--------------------------------------------------------------
 // Advanced Completion
@@ -412,17 +418,16 @@ void rpl_set_insertion_braces(const char* brace_pairs);
 /// Get the raw current input (and cursor position if `cursor` != NULL) for the completion.
 /// Usually completer functions should look at their `prefix` though as transformers
 /// like `rpl_complete_word` may modify the prefix (for example, unescape it).
-const char* rpl_completion_input( rpl_completion_env_t* cenv, long* cursor );
+	const char *rpl_completion_input(rpl_completion_env_t * cenv, long *cursor);
 
 /// Get the completion argument passed to `rpl_set_completer`.
-void* rpl_completion_arg( const rpl_completion_env_t* cenv );
+	void *rpl_completion_arg(const rpl_completion_env_t * cenv);
 
 /// Do we have already some completions?
-bool rpl_has_completions( const rpl_completion_env_t* cenv );
+	bool rpl_has_completions(const rpl_completion_env_t * cenv);
 
 /// Do we already have enough completions and should we return if possible? (for improved latency)
-bool rpl_stop_completing( const rpl_completion_env_t* cenv);
-
+	bool rpl_stop_completing(const rpl_completion_env_t * cenv);
 
 /// Primitive completion, cannot be used with most transformers (like `rpl_complete_word` and `rpl_complete_qword`).
 /// When completed, `delete_before` _bytes_ are deleted before the cursor position,
@@ -433,9 +438,10 @@ bool rpl_stop_completing( const rpl_completion_env_t* cenv);
 ///
 /// Returns `true` if the callback should continue trying to find more possible completions.
 /// If `false` is returned, the callback should try to return and not add more completions (for improved latency).
-bool rpl_add_completion_prim( rpl_completion_env_t* cenv, const char* completion, 
-                              const char* display, const char* help, 
-                               long delete_before, long delete_after);
+	bool rpl_add_completion_prim(rpl_completion_env_t * cenv,
+	                             const char *completion, const char *display,
+	                             const char *help, long delete_before,
+	                             long delete_after);
 
 /// \}
 
@@ -446,64 +452,66 @@ bool rpl_add_completion_prim( rpl_completion_env_t* cenv, const char* completion
 
 /// Convenience: return the position of a previous code point in a UTF-8 string `s` from postion `pos`.
 /// Returns `-1` if `pos <= 0` or `pos > strlen(s)` (or other errors).
-long rpl_prev_char( const char* s, long pos );
+	long rpl_prev_char(const char *s, long pos);
 
 /// Convenience: return the position of the next code point in a UTF-8 string `s` from postion `pos`.
 /// Returns `-1` if `pos < 0` or `pos >= strlen(s)` (or other errors).
-long rpl_next_char( const char* s, long pos );
+	long rpl_next_char(const char *s, long pos);
 
 /// Convenience: does a string `s` starts with a given `prefix` ?
-bool rpl_starts_with( const char* s, const char* prefix );
+	bool rpl_starts_with(const char *s, const char *prefix);
 
 /// Convenience: does a string `s` starts with a given `prefix` ignoring (ascii) case?
-bool rpl_istarts_with( const char* s, const char* prefix );
-
+	bool rpl_istarts_with(const char *s, const char *prefix);
 
 /// Convenience: character class for whitespace `[ \t\r\n]`.
-bool rpl_char_is_white(const char* s, long len);
+	bool rpl_char_is_white(const char *s, long len);
 
 /// Convenience: character class for non-whitespace `[^ \t\r\n]`.
-bool rpl_char_is_nonwhite(const char* s, long len);
+	bool rpl_char_is_nonwhite(const char *s, long len);
 
 /// Convenience: character class for separators.
 /// (``[ \t\r\n,.;:/\\(){}\[\]]``.)
 /// This is used for word boundaries in repline.
-bool rpl_char_is_separator(const char* s, long len);
+	bool rpl_char_is_separator(const char *s, long len);
 
 /// Convenience: character class for non-separators.
-bool rpl_char_is_nonseparator(const char* s, long len);
+	bool rpl_char_is_nonseparator(const char *s, long len);
 
 /// Convenience: character class for letters (`[A-Za-z]` and any unicode > 0x80).
-bool rpl_char_is_letter(const char* s, long len);
+	bool rpl_char_is_letter(const char *s, long len);
 
 /// Convenience: character class for digits (`[0-9]`).
-bool rpl_char_is_digit(const char* s, long len);
+	bool rpl_char_is_digit(const char *s, long len);
 
 /// Convenience: character class for hexadecimal digits (`[A-Fa-f0-9]`).
-bool rpl_char_is_hexdigit(const char* s, long len);
+	bool rpl_char_is_hexdigit(const char *s, long len);
 
 /// Convenience: character class for identifier letters (`[A-Za-z0-9_-]` and any unicode > 0x80).
-bool rpl_char_is_idletter(const char* s, long len);
+	bool rpl_char_is_idletter(const char *s, long len);
 
 /// Convenience: character class for filename letters (_not in_ " \t\r\n`@$><=;|&\{\}\(\)\[\]]").
-bool rpl_char_is_filename_letter(const char* s, long len);
-
+	bool rpl_char_is_filename_letter(const char *s, long len);
 
 /// Convenience: If this is a token start, return the length. Otherwise return 0.
-long rpl_is_token(const char* s, long pos, rpl_is_char_class_fun_t* is_token_char);
+	long rpl_is_token(const char *s, long pos,
+	                  rpl_is_char_class_fun_t * is_token_char);
 
 /// Convenience: Does this match the specified token? 
 /// Ensures not to match prefixes or suffixes, and returns the length of the match (in bytes).
 /// E.g. `rpl_match_token("function",0,&rpl_char_is_letter,"fun")` returns 0.
 /// while `rpl_match_token("fun x",0,&rpl_char_is_letter,"fun"})` returns 3.
-long rpl_match_token(const char* s, long pos, rpl_is_char_class_fun_t* is_token_char, const char* token);
-
+	long rpl_match_token(const char *s, long pos,
+	                     rpl_is_char_class_fun_t * is_token_char,
+	                     const char *token);
 
 /// Convenience: Do any of the specified tokens match? 
 /// Ensures not to match prefixes or suffixes, and returns the length of the match (in bytes).
 /// E.g. `rpl_match_any_token("function",0,&rpl_char_is_letter,{"fun","func",NULL})` returns 0.
 /// while `rpl_match_any_token("func x",0,&rpl_char_is_letter,{"fun","func",NULL})` returns 4.
-long rpl_match_any_token(const char* s, long pos, rpl_is_char_class_fun_t* is_token_char, const char** tokens);
+	long rpl_match_any_token(const char *s, long pos,
+	                         rpl_is_char_class_fun_t * is_token_char,
+	                         const char **tokens);
 
 /// \}
 
@@ -519,54 +527,54 @@ long rpl_match_any_token(const char* s, long pos, rpl_is_char_class_fun_t* is_to
 /// Call this before using the terminal write functions (`rpl_term_write`)
 /// Does nothing on most platforms but on Windows it sets the console to UTF8 output and possible 
 /// enables virtual terminal processing.
-void rpl_term_init(void);
+	void rpl_term_init(void);
 
 /// Call this when done with the terminal functions.
-void rpl_term_done(void);
+	void rpl_term_done(void);
 
 /// Flush the terminal output. 
 /// (happens automatically on newline characters ('\n') as well).
-void rpl_term_flush(void);
+	void rpl_term_flush(void);
 
 /// Write a string to the console (and process CSI escape sequences).
-void rpl_term_write(const char* s);
+	void rpl_term_write(const char *s);
 
 /// Write a string to the console and end with a newline 
 /// (and process CSI escape sequences).
-void rpl_term_writeln(const char* s);
+	void rpl_term_writeln(const char *s);
 
 /// Write a formatted string to the console.
 /// (and process CSI escape sequences)
-void rpl_term_writef(const char* fmt, ...);
+	void rpl_term_writef(const char *fmt, ...);
 
 /// Write a formatted string to the console.
-void rpl_term_vwritef(const char* fmt, va_list args);
+	void rpl_term_vwritef(const char *fmt, va_list args);
 
 /// Set text attributes from a style.
-void rpl_term_style( const char* style );
+	void rpl_term_style(const char *style);
 
 /// Set text attribute to bold.
-void rpl_term_bold(bool enable);
+	void rpl_term_bold(bool enable);
 
 /// Set text attribute to underline.
-void rpl_term_underline(bool enable);
+	void rpl_term_underline(bool enable);
 
 /// Set text attribute to italic.
-void rpl_term_italic(bool enable);
+	void rpl_term_italic(bool enable);
 
 /// Set text attribute to reverse video.
-void rpl_term_reverse(bool enable);
+	void rpl_term_reverse(bool enable);
 
 /// Set text attribute to ansi color palette index between 0 and 255 (or 256 for the ANSI "default" color).
 /// (auto matched to smaller palette if not supported)
-void rpl_term_color_ansi(bool foreground, int color);
+	void rpl_term_color_ansi(bool foreground, int color);
 
 /// Set text attribute to 24-bit RGB color (between `0x000000` and `0xFFFFFF`).
 /// (auto matched to smaller palette if not supported)
-void rpl_term_color_rgb(bool foreground, uint32_t color );
+	void rpl_term_color_rgb(bool foreground, uint32_t color);
 
 /// Reset the text attributes.
-void rpl_term_reset( void );
+	void rpl_term_reset(void);
 
 /// Get the palette used by the terminal:
 /// This is usually initialized from the COLORTERM environment variable. The 
@@ -577,7 +585,7 @@ void rpl_term_reset( void );
 /// - 4: regular ANSI terminal with 16 colors.     (`16color`/`4bit`)
 /// - 8: terminal with ANSI 256 color palette.     (`256color`/`8bit`)
 /// - 24: true-color terminal with full RGB colors. (`truecolor`/`24bit`/`direct`)
-int rpl_term_get_color_bits( void );
+	int rpl_term_get_color_bits(void);
 
 /// \}
 
@@ -592,7 +600,7 @@ int rpl_term_get_color_bits( void );
 /// Returns `true` if the event was successfully delivered.
 /// (This may not be supported on all platforms, but it is
 /// functional on Linux, macOS and Windows).
-bool rpl_async_stop(void);
+	bool rpl_async_stop(void);
 
 /// \}
 
@@ -601,27 +609,28 @@ bool rpl_async_stop(void);
 /// Register allocation functions for custom allocators
 /// \{
 
-typedef void* (rpl_malloc_fun_t)( size_t size );
-typedef void* (rpl_realloc_fun_t)( void* p, size_t newsize );
-typedef void  (rpl_free_fun_t)( void* p );
+	typedef void *(rpl_malloc_fun_t) (size_t size);
+	typedef void *(rpl_realloc_fun_t) (void *p, size_t newsize);
+	typedef void (rpl_free_fun_t) (void *p);
 
 /// Initialize with custom allocation functions.
 /// This must be called as the first function in a program!
-void rpl_init_custom_alloc( rpl_malloc_fun_t* _malloc, rpl_realloc_fun_t* _realloc, rpl_free_fun_t* _free );
+	void rpl_init_custom_alloc(rpl_malloc_fun_t * _malloc,
+	                           rpl_realloc_fun_t * _realloc,
+	                           rpl_free_fun_t * _free);
 
 /// Free a potentially custom alloc'd pointer (in particular, the result returned from `rpl_readline`)
-void rpl_free( void* p );
+	void rpl_free(void *p);
 
 /// Allocate using the current memory allocator.
-void* rpl_malloc(size_t sz);
+	void *rpl_malloc(size_t sz);
 
 /// Duplicate a string using the current memory allocator.
-const char* rpl_strdup( const char* s );
+	const char *rpl_strdup(const char *s);
 
 /// \}
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /// RPL_REPLINE_H
+#endif                          /// RPL_REPLINE_H
