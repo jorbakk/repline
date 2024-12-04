@@ -337,6 +337,7 @@ history_close(history_t * h)
 {
 	/// Get all double entries with pid == NULL and pid == getpid()
 	/// FIXME this only works with allow_duplicates disabled: one entry for cp.cid and cn.cid
+	db_exec_str(&h->db, "BEGIN TRANSACTION");
 	db_in_int(&h->db, DB_GET_DBL_PIDS, 1, getpid());
 	while (db_exec(&h->db, DB_GET_DBL_PIDS) == DB_ROW) {
 		int cpid_cid = db_out_int(&h->db, DB_GET_DBL_PIDS, 1);
@@ -359,6 +360,7 @@ history_close(history_t * h)
 	db_in_int(&h->db, DB_SET_PID_NULL, 1, getpid());
 	db_exec(&h->db, DB_SET_PID_NULL);
 	db_reset(&h->db, DB_SET_PID_NULL);
+	db_exec_str(&h->db, "COMMIT");
 }
 
 /// Parameter n is the history command index from latest to oldest, starting with 1
