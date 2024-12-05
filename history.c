@@ -15,7 +15,6 @@ struct history_s {
 	const char **elems;         // history items (up to count)
 	const char *fname;          // history file
 	alloc_t *mem;
-	bool allow_duplicates;      // allow duplicate entries?
 };
 
 rpl_private void history_load(history_t * h);
@@ -43,14 +42,6 @@ history_free(history_t * h)
 	mem_free(h->mem, h->fname);
 	h->fname = NULL;
 	mem_free(h->mem, h);        // free ourselves
-}
-
-rpl_private bool
-history_enable_duplicates(history_t * h, bool enable)
-{
-	bool prev = h->allow_duplicates;
-	h->allow_duplicates = enable;
-	return prev;
 }
 
 rpl_private ssize_t
@@ -107,11 +98,9 @@ history_push(history_t * h, const char *entry)
 	if (h->len <= 0 || entry == NULL)
 		return false;
 	// remove any older duplicate
-	if (!h->allow_duplicates) {
-		for (int i = 0; i < h->count; i++) {
-			if (strcmp(h->elems[i], entry) == 0) {
-				history_delete_at(h, i);
-			}
+	for (int i = 0; i < h->count; i++) {
+		if (strcmp(h->elems[i], entry) == 0) {
+			history_delete_at(h, i);
 		}
 	}
 	// insert at front

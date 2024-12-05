@@ -27,13 +27,13 @@ struct history_s {
 	const char *fname;          // history file
 	struct db_t db;
 	alloc_t *mem;
-	bool allow_duplicates;      // allow duplicate entries?
 };
 
 static const char *db_tables[] = {
 	"create table if not exists cmds (cid integer, ts integer, pid integer, cmd text)",
 	"create index if not exists cmdididx on cmds(cid, ts, pid)",
 	"create index if not exists cmdtxtidx on cmds(pid, cmd)",
+	"create index if not exists cmdidx on cmds(cmd)",
 	NULL
 };
 
@@ -65,15 +65,15 @@ static const struct db_query_t db_queries[] = {
 	{DB_MAX_ID_CMD, "select max(cid) from cmds"},
 	{DB_COUNT_CMD, "select count(cid) from cmds"},
 	{DB_GET_PREV_CNT,
-	 "select count(distinct cmd) from cmds where cmd like ? and (pid = ? or pid is NULL)"},
+	 "select count(cmd) from cmds where pid = ? or pid is NULL"},
 	{DB_GET_PREV_CMD,
-	 "select distinct cmd from cmds where cmd like ? and (pid = ? or pid is NULL) order by pid desc, ts desc, cid desc limit 1 offset ?"},
-	{DB_GET_PREF_CNT, "select count(distinct cmd) from cmds where cmd like ?"},
+	 "select cmd, max(pid) from cmds where pid = ? or pid is NULL group by cmd order by pid desc, ts desc, cid desc limit 1 offset ?"},
+	{DB_GET_PREF_CNT, "select count(cmd) from cmds where cmd like ?"},
 	{DB_GET_PREF_CMD,
-	 "select distinct cmd from cmds where cmd like ? order by ts desc, cid desc limit 1 offset ?"},
+	 "select cmd from cmds where cmd like ? order by ts desc, cid desc limit 1 offset ?"},
 	{DB_GET_DBL_PIDS,
 	 "select cpid.cid, cpid.ts, cnull.cid, cnull.ts from cmds as cpid, cmds as cnull where cpid.pid = ? and cnull.pid is NULL and cpid.cmd = cnull.cmd"},
-	{DB_GET_CMD_ID, "select cid, pid from cmds where cmd = ? limit 1"},
+	{DB_GET_CMD_ID, "select cid, pid from cmds where cmd = ? order by pid desc, ts desc, cid desc limit 1"},
 	{DB_DEL_CMD_ID, "delete from cmds where cid = ?"},
 	{DB_DEL_ALL, "delete from cmds"},
 	{DB_UPD_TS, "update cmds set ts = ? where cid = ?"},
@@ -232,20 +232,11 @@ history_free(history_t * h)
 	mem_free(h->mem, h);        // free ourselves
 }
 
-rpl_private bool
-history_enable_duplicates(history_t * h, bool enable)
-{
-	bool prev = h->allow_duplicates;
-	h->allow_duplicates = enable;
-	return prev;
-}
-
 rpl_private ssize_t
 history_count_with_prefix(const history_t * h, const char *prefix)
 {
 	if (strlen(prefix) == 0) {
-		db_in_txt(&h->db, DB_GET_PREV_CNT, 1, "%");
-		db_in_int(&h->db, DB_GET_PREV_CNT, 2, getpid());
+		db_in_int(&h->db, DB_GET_PREV_CNT, 1, getpid());
 		db_exec(&h->db, DB_GET_PREV_CNT);
 		int count = db_out_int(&h->db, DB_GET_PREV_CNT, 1);
 		db_reset(&h->db, DB_GET_PREV_CNT);
@@ -279,27 +270,25 @@ history_push(history_t * h, const char *entry)
 	if (entry == NULL || rpl_strlen(entry) == 0)
 		return false;
 
-	if (!h->allow_duplicates) {
-		db_in_txt(&h->db, DB_GET_CMD_ID, 1, entry);
-		int cid = -1;
-		int pid = -1;
-		if (db_exec(&h->db, DB_GET_CMD_ID) == DB_ROW) {;
-			cid = db_out_int(&h->db, DB_GET_CMD_ID, 1);
-			pid = db_out_int(&h->db, DB_GET_CMD_ID, 2);
-		}
-		db_reset(&h->db, DB_GET_CMD_ID);
-		/// Update timestamp only if the command is entered by the same process.
-		/// Otherwise, time stamps will be updated in history_close().
-		if (cid != -1 && pid == getpid()) {
-			debug_msg("duplicate history entry (cid=%d, pid=%d), updating timestamp: %s\n", cid, pid, entry);
-			db_in_int(&h->db, DB_UPD_TS, 1, get_current_ts());
-			db_in_int(&h->db, DB_UPD_TS, 2, cid);
-			db_exec(&h->db, DB_UPD_TS);
-			db_reset(&h->db, DB_UPD_TS);
-			return false;
-		}
+	db_in_txt(&h->db, DB_GET_CMD_ID, 1, entry);
+	int cid = -1;
+	int pid = -1;
+	if (db_exec(&h->db, DB_GET_CMD_ID) == DB_ROW) {;
+		cid = db_out_int(&h->db, DB_GET_CMD_ID, 1);
+		pid = db_out_int(&h->db, DB_GET_CMD_ID, 2);
 	}
-	debug_msg("new history entry: %s\n", entry);
+	db_reset(&h->db, DB_GET_CMD_ID);
+	/// Update timestamp only if the command is entered by the same process.
+	/// Otherwise, time stamps will be updated in history_close().
+	if (cid != -1 && pid == getpid()) {
+		debug_msg("duplicate history entry (cid=%d, pid=%d), updating timestamp: %s\n", cid, pid, entry);
+		db_in_int(&h->db, DB_UPD_TS, 1, get_current_ts());
+		db_in_int(&h->db, DB_UPD_TS, 2, cid);
+		db_exec(&h->db, DB_UPD_TS);
+		db_reset(&h->db, DB_UPD_TS);
+		return false;
+	}
+	debug_msg("new history entry (cid=%d, pid=%d): %s\n", cid, pid, entry);
 	/// If command is new or in global history, create a new entry in history for this command,
 	/// tagged with the current pid.
 	db_exec(&h->db, DB_MAX_ID_CMD);
@@ -338,7 +327,6 @@ rpl_private void
 history_close(history_t * h)
 {
 	/// Get all double entries with pid == NULL and pid == getpid()
-	/// FIXME this only works with allow_duplicates disabled: one entry for cp.cid and cn.cid
 	db_exec_str(&h->db, "BEGIN TRANSACTION");
 	db_in_int(&h->db, DB_GET_DBL_PIDS, 1, getpid());
 	while (db_exec(&h->db, DB_GET_DBL_PIDS) == DB_ROW) {
@@ -373,16 +361,14 @@ history_get_with_prefix(const history_t * h, ssize_t n, const char *prefix)
 	if (n <= 0)
 		return NULL;
 	if (strlen(prefix) == 0) {
-		db_in_txt(&h->db, DB_GET_PREV_CNT, 1, "%");
-		db_in_int(&h->db, DB_GET_PREV_CNT, 2, getpid());
+		db_in_int(&h->db, DB_GET_PREV_CNT, 1, getpid());
 		db_exec(&h->db, DB_GET_PREV_CNT);
 		int cnt = db_out_int(&h->db, DB_GET_PREV_CNT, 1);
 		db_reset(&h->db, DB_GET_PREV_CNT);
 		if (n < 0 || n > cnt)
 			return NULL;
-		db_in_txt(&h->db, DB_GET_PREV_CMD, 1, "%");
-		db_in_int(&h->db, DB_GET_PREV_CMD, 2, getpid());
-		db_in_int(&h->db, DB_GET_PREV_CMD, 3, n - 1);
+		db_in_int(&h->db, DB_GET_PREV_CMD, 1, getpid());
+		db_in_int(&h->db, DB_GET_PREV_CMD, 2, n - 1);
 		int ret = db_exec(&h->db, DB_GET_PREV_CMD);
 		if (ret != DB_ROW)
 			return NULL;

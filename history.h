@@ -23,7 +23,6 @@ rpl_private const char *history_get_with_prefix(const history_t * h, ssize_t n,
 /// Called from public repline API:
 rpl_private void history_clear(history_t * h);
 rpl_private void history_close(history_t * h);
-rpl_private bool history_enable_duplicates(history_t * h, bool enable);
 rpl_private void history_load_from(history_t * h, const char *fname,
                                    long max_entries);
 rpl_private bool history_push(history_t * h, const char *entry);

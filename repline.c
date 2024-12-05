@@ -258,15 +258,6 @@ rpl_enable_color(bool enable)
 	return term_enable_color(env->term, enable);
 }
 
-rpl_public bool
-rpl_enable_history_duplicates(bool enable)
-{
-	rpl_env_t *env = rpl_get_env();
-	if (env == NULL)
-		return false;
-	return history_enable_duplicates(env->history, enable);
-}
-
 rpl_public void
 rpl_set_history(const char *fname, long max_entries)
 {

@@ -351,10 +351,6 @@ Contents:
 /// Returns the previous setting.
 	bool rpl_enable_color(bool enable);
 
-/// Disable or enable duplicate entries in the history (disabled by default).
-/// Returns the previous setting.
-	bool rpl_enable_history_duplicates(bool enable);
-
 /// Disable or enable automatic tab completion after a completion 
 /// to expand as far as possible if the completions are unique. (disabled by default).
 /// Returns the previous setting.
