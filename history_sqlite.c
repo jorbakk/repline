@@ -65,12 +65,12 @@ static const struct db_query_t db_queries[] = {
 	{DB_MAX_ID_CMD, "select max(cid) from cmds"},
 	{DB_COUNT_CMD, "select count(cid) from cmds"},
 	{DB_GET_PREV_CNT,
-	 "select count(cid) from cmds where cmd like ? and (pid = ? or pid is NULL)"},
+	 "select count(distinct cmd) from cmds where cmd like ? and (pid = ? or pid is NULL)"},
 	{DB_GET_PREV_CMD,
-	 "select cmd from cmds where cmd like ? and (pid = ? or pid is NULL) order by pid desc, ts desc, cid desc limit 1 offset ?"},
-	{DB_GET_PREF_CNT, "select count(cid) from cmds where cmd like ?"},
+	 "select distinct cmd from cmds where cmd like ? and (pid = ? or pid is NULL) order by pid desc, ts desc, cid desc limit 1 offset ?"},
+	{DB_GET_PREF_CNT, "select count(distinct cmd) from cmds where cmd like ?"},
 	{DB_GET_PREF_CMD,
-	 "select cmd from cmds where cmd like ? order by ts desc, cid desc limit 1 offset ?"},
+	 "select distinct cmd from cmds where cmd like ? order by ts desc, cid desc limit 1 offset ?"},
 	{DB_GET_DBL_PIDS,
 	 "select cpid.cid, cpid.ts, cnull.cid, cnull.ts from cmds as cpid, cmds as cnull where cpid.pid = ? and cnull.pid is NULL and cpid.cmd = cnull.cmd"},
 	{DB_GET_CMD_ID, "select cid, pid from cmds where cmd = ? limit 1"},
@@ -288,10 +288,10 @@ history_push(history_t * h, const char *entry)
 			pid = db_out_int(&h->db, DB_GET_CMD_ID, 2);
 		}
 		db_reset(&h->db, DB_GET_CMD_ID);
-		/// Update timestamp only if the command is entered by the same process
-		/// ... otherwise, time stamps will be updated on history_close()
-		if (cid != -1 && pid != 0) {
-			debug_msg("duplicate entry: %s\n", entry);
+		/// Update timestamp only if the command is entered by the same process.
+		/// Otherwise, time stamps will be updated in history_close().
+		if (cid != -1 && pid == getpid()) {
+			debug_msg("duplicate history entry (cid=%d, pid=%d), updating timestamp: %s\n", cid, pid, entry);
 			db_in_int(&h->db, DB_UPD_TS, 1, get_current_ts());
 			db_in_int(&h->db, DB_UPD_TS, 2, cid);
 			db_exec(&h->db, DB_UPD_TS);
@@ -299,7 +299,9 @@ history_push(history_t * h, const char *entry)
 			return false;
 		}
 	}
-
+	debug_msg("new history entry: %s\n", entry);
+	/// If command is new or in global history, create a new entry in history for this command,
+	/// tagged with the current pid.
 	db_exec(&h->db, DB_MAX_ID_CMD);
 	int new_cid = db_out_int(&h->db, DB_MAX_ID_CMD, 1) + 1;
 	db_reset(&h->db, DB_MAX_ID_CMD);
