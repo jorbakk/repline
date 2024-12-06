@@ -73,7 +73,7 @@ static const struct db_query_t db_queries[] = {
 	 "select cmd, max(ts) as mts, max(cid) as mcid from cmds where cmd like ? group by cmd order by mts desc, mcid desc limit 1 offset ?"},
 	{DB_GET_DBL_PIDS,
 	 "select cpid.cid, cpid.ts, cnull.cid, cnull.ts from cmds as cpid, cmds as cnull where cpid.pid = ? and cnull.pid is NULL and cpid.cmd = cnull.cmd"},
-	{DB_GET_CMD_ID, "select cid, pid from cmds where cmd = ? order by pid desc, ts desc, cid desc limit 1"},
+	{DB_GET_CMD_ID, "select cid, pid from cmds where cmd = ? and pid = ? order by pid desc, ts desc, cid desc limit 1"},
 	{DB_DEL_CMD_ID, "delete from cmds where cid = ?"},
 	{DB_DEL_ALL, "delete from cmds"},
 	{DB_UPD_TS, "update cmds set ts = ? where cid = ?"},
@@ -271,6 +271,7 @@ history_push(history_t * h, const char *entry)
 		return false;
 
 	db_in_txt(&h->db, DB_GET_CMD_ID, 1, entry);
+	db_in_int(&h->db, DB_GET_CMD_ID, 2, getpid());
 	int cid = -1;
 	int pid = -1;
 	if (db_exec(&h->db, DB_GET_CMD_ID) == DB_ROW) {;
