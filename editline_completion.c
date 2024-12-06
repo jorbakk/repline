@@ -207,49 +207,12 @@ edit_completion_menu(rpl_env_t * env, editor_t * eb, bool more_available)
 	sbuf_clear(eb->extra);
 
 	/// Direct selection?
-	bool dirsel = false;
-	int ki = -1;
-	switch(c) {
-	case WITH_ALT('1'):
-		ki = 0;
-		dirsel = true;
-		break;
-	case WITH_ALT('2'):
-		ki = 1;
-		dirsel = true;
-		break;
-	case WITH_ALT('3'):
-		ki = 2;
-		dirsel = true;
-		break;
-	case WITH_ALT('4'):
-		ki = 3;
-		dirsel = true;
-		break;
-	case WITH_ALT('5'):
-		ki = 4;
-		dirsel = true;
-		break;
-	case WITH_ALT('6'):
-		ki = 5;
-		dirsel = true;
-		break;
-	case WITH_ALT('7'):
-		ki = 6;
-		dirsel = true;
-		break;
-	case WITH_ALT('8'):
-		ki = 7;
-		dirsel = true;
-		break;
-	case WITH_ALT('9'):
-		ki = 8;
-		dirsel = true;
-		break;
-	}
-	if (dirsel && ki < count) {
-		selected = ki;
-		c = KEY_ENTER;
+	if (c >= WITH_ALT('1') && c <= WITH_ALT('9')) {
+		ssize_t i = (c - WITH_ALT('1'));
+		if (i < count) {
+			selected = i;
+			c = KEY_ENTER;
+		}
 	}
 
 	// process commands
