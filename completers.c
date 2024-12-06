@@ -702,9 +702,6 @@ filename_complete_indir(rpl_completion_env_t * cenv, stringbuf_t * dir,
 							}
 						}
 						if (contains_non_word_char) {
-							/// TODO use quote_chars instead of "'"
-							// sbuf_insert_char_at(dir_prefix, '\'', 0);
-							// wenv->quote = '\'';
 							sbuf_insert_char_at(dir_prefix, wenv->quote_chars[0], 0);
 							wenv->quote = wenv->quote_chars[0];
 						}
