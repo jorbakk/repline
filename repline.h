@@ -360,6 +360,10 @@ Contents:
 /// Returns the previous setting.
 	bool rpl_enable_completion_preview(bool enable);
 
+/// Disable or enable always quote instead of escaping single characters (enabled by default)
+/// Returns the previous setting.
+	bool rpl_enable_completion_always_quote(bool enable);
+
 /// Disable or enable automatic identation of continuation lines in multiline
 /// input so it aligns with the initial prompt.
 /// Returns the previous setting.

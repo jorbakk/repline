@@ -82,6 +82,7 @@ rpl_complete_word(rpl_completion_env_t * cenv, const char *prefix,
 typedef struct qword_closure_s {
 	char escape_char;
 	char quote;
+	const char *quote_chars;
 	long delete_before_adjust;
 	stringbuf_t *sbuf;
 	void *prev_env;
@@ -247,6 +248,7 @@ rpl_complete_qword_ex(rpl_completion_env_t * cenv, const char *prefix,
 	// set up the closure
 	qword_closure_t wenv;
 	wenv.quote = quote;
+	wenv.quote_chars = quote_chars;
 	wenv.is_word_char = is_word_char;
 	wenv.escape_char = escape_char;
 	wenv.delete_before_adjust = (long)(len - pos);
@@ -689,8 +691,25 @@ filename_complete_indir(rpl_completion_env_t * cenv, stringbuf_t * dir,
 					sbuf_clear(display);
 					ls_colorize(cenv->env->no_lscolors, display, ft, name, NULL,
 					            (isdir ? dir_sep : 0));
-					cont =
-					    rpl_add_completion_ex(cenv, sbuf_string(dir_prefix),
+					/// Check if filename contains non-word chars and prepend a quote
+					if (!cenv->env->complete_noquote) {
+						bool contains_non_word_char = false;
+						qword_closure_t* wenv = cenv->closure;
+						for (int i = 0; name[i]; ++i) {
+							if (!wenv->is_word_char(name + i, 1)) {
+								contains_non_word_char = true;
+								break;
+							}
+						}
+						if (contains_non_word_char) {
+							/// TODO use quote_chars instead of "'"
+							// sbuf_insert_char_at(dir_prefix, '\'', 0);
+							// wenv->quote = '\'';
+							sbuf_insert_char_at(dir_prefix, wenv->quote_chars[0], 0);
+							wenv->quote = wenv->quote_chars[0];
+						}
+					}
+					cont = rpl_add_completion_ex(cenv, sbuf_string(dir_prefix),
 					                          sbuf_string(display), NULL);
 				}
 				sbuf_delete_from(dir_prefix, plen); // restore dir_prefix

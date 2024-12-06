@@ -36,6 +36,7 @@ struct rpl_env_s {
 	bool singleline_only;       // allow only single line editing?
 	bool complete_nopreview;    // do not show completion preview for each selection in the completion menu?
 	bool complete_autotab;      // try to keep completing after a completion?
+	bool complete_noquote;      // don't quote (file) names but escape single characters
 	bool no_multiline_indent;   // indent continuation lines to line up under the initial prompt 
 	bool no_help;               // show short help line for history search etc.
 	bool no_hint;               // allow hinting?

@@ -326,6 +326,17 @@ rpl_enable_completion_preview(bool enable)
 }
 
 rpl_public bool
+rpl_enable_completion_always_quote(bool enable)
+{
+	rpl_env_t *env = rpl_get_env();
+	if (env == NULL)
+		return false;
+	bool prev = env->complete_noquote;
+	env->complete_noquote = !enable;
+	return !prev;
+}
+
+rpl_public bool
 rpl_enable_multiline_indent(bool enable)
 {
 	rpl_env_t *env = rpl_get_env();
