@@ -67,6 +67,9 @@ edit_history_next(rpl_env_t * env, editor_t * eb)
 static void
 edit_history_prev_word(rpl_env_t * env, editor_t * eb)
 {
+	/// FIXME word history doesn't go further than previous command (leave it like that?)
+	/// FIXME quote character should be provided somewhere, maybe as a global option
+	///       for completions it is in qword_closure_t->quote_chars
 	if (eb->history_wpos == 0)
 		eb->history_widx++;
 	const char *entry =
@@ -81,21 +84,21 @@ edit_history_prev_word(rpl_env_t * env, editor_t * eb)
 	if (eb->history_wpos == 0) {
 		word_end = sbuf_len(entry_s) - 1;
 	}
-	ssize_t word_start_ws = sbuf_find_ws_word_start(entry_s, word_end);
+	ssize_t word_start = sbuf_find_ws_word_start(entry_s, word_end);
 	char *entry_ss = sbuf_strdup(entry_s);
 	if (*(entry_ss + word_end) == '\'') {
 		*(entry_ss + word_end) = '\0';
-		word_start_ws = strrchr(entry_ss, '\'') - entry_ss;
+		word_start = strrchr(entry_ss, '\'') - entry_ss;
 	}
-	// debug_msg("edit history: prev word: %d, entry: %s, start: %d, start_ws: %d, end: %d\n",
-	     // eb->history_widx, entry, word_start, word_start_ws, word_end);
+	// debug_msg("edit history: prev word: %d, entry: %s, start: %d, end: %d\n",
+	     // eb->history_widx, entry, word_start, word_end);
 	sbuf_clear(eb->hint);
-	sbuf_append_n(eb->hint, entry + word_start_ws, word_end - word_start_ws + 1);
-	word_start_ws--;
-	while (word_start_ws > 0 && *(entry_ss + word_start_ws) == ' ') {
-		word_start_ws--;
-	}
-	eb->history_wpos = word_start_ws;
+	sbuf_append_n(eb->hint, entry + word_start, word_end - word_start + 1);
+	do {
+		word_start--;
+	} while (word_start >= 0 && rpl_char_is_white(entry_ss + word_start, 1));
+	// if (word_start < 0) word_start = 0;
+	eb->history_wpos = word_start;
 	edit_refresh(env, eb);
 	sbuf_free(entry_s);
 	free(entry_ss);
