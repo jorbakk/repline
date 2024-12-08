@@ -77,21 +77,28 @@ edit_history_prev_word(rpl_env_t * env, editor_t * eb)
 	}
 	stringbuf_t *entry_s = sbuf_new(eb->mem);
 	sbuf_append(entry_s, entry);
-	ssize_t word_start = eb->history_wpos;
 	ssize_t word_end = eb->history_wpos;
-	if (word_start == 0) {
-		word_end = sbuf_len(entry_s);
+	if (eb->history_wpos == 0) {
+		word_end = sbuf_len(entry_s) - 1;
 	}
-	word_start = sbuf_find_word_start(entry_s, word_end);
 	ssize_t word_start_ws = sbuf_find_ws_word_start(entry_s, word_end);
-	debug_msg
-	    ("edit history: prev word: %d, entry: %s, start: %d, start_ws: %d, end: %d\n",
-	     eb->history_widx, entry, word_start, word_start_ws, word_end);
+	char *entry_ss = sbuf_strdup(entry_s);
+	if (*(entry_ss + word_end) == '\'') {
+		*(entry_ss + word_end) = '\0';
+		word_start_ws = strrchr(entry_ss, '\'') - entry_ss;
+	}
+	// debug_msg("edit history: prev word: %d, entry: %s, start: %d, start_ws: %d, end: %d\n",
+	     // eb->history_widx, entry, word_start, word_start_ws, word_end);
 	sbuf_clear(eb->hint);
-	sbuf_append_n(eb->hint, entry + word_start_ws, word_end - word_start_ws);
-	eb->history_wpos = word_start;
+	sbuf_append_n(eb->hint, entry + word_start_ws, word_end - word_start_ws + 1);
+	word_start_ws--;
+	while (word_start_ws > 0 && *(entry_ss + word_start_ws) == ' ') {
+		word_start_ws--;
+	}
+	eb->history_wpos = word_start_ws;
 	edit_refresh(env, eb);
 	sbuf_free(entry_s);
+	free(entry_ss);
 #ifdef RPL_HIST_IMPL_SQLITE
 	env->mem->free((char *)entry);
 #endif

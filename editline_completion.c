@@ -206,7 +206,7 @@ edit_completion_menu(rpl_env_t * env, editor_t * eb, bool more_available)
 	}
 	sbuf_clear(eb->extra);
 
-	/// Direct selection?
+	// direct selection?
 	if (c >= WITH_ALT('1') && c <= WITH_ALT('9')) {
 		ssize_t i = (c - WITH_ALT('1'));
 		if (i < count) {
