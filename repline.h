@@ -130,6 +130,7 @@ Contents:
 /// Add an entry to the history
 	void rpl_history_add(const char *entry);
 
+/// Close the history by merging pid-local to global history
 	void rpl_history_close();
 
 /// \}
@@ -149,11 +150,12 @@ Contents:
 	typedef struct rpl_completion_env_s rpl_completion_env_t;
 
 /// A completion callback that is called by repline when tab is pressed.
-/// It is passed a completion environment (containing the current input and the current cursor position), 
+/// It is passed a completion environment (containing the current input and
+/// the current cursor position),
 /// the current input up-to the cursor (`prefix`)
 /// and the user given argument when the callback was set.
-/// When using completion transformers, like `rpl_complete_quoted_word` the `prefix` contains the
-/// the word to be completed without escape characters or quotes.
+/// When using completion transformers, like `rpl_complete_quoted_word`
+/// the `prefix` contains the word to be completed without escape characters or quotes.
 	typedef void (rpl_completer_fun_t) (rpl_completion_env_t * cenv,
 	                                    const char *prefix);
 
@@ -161,18 +163,20 @@ Contents:
 /// @param completer  The completion function
 /// @param arg        Argument passed to the \a completer.
 /// There can only be one default completion function, setting it again disables the previous one.
-/// The initial completer use `rpl_complete_filename`.
+/// The initial default completer uses `rpl_complete_filename`.
 	void rpl_set_default_completer(rpl_completer_fun_t * completer, void *arg);
 
-/// In a completion callback (usually from rpl_complete_word()), use this function to add a completion.
-/// (the completion string is copied by repline and do not need to be preserved or allocated).
+/// Use this function to add a completion in a completion callback, which in turn
+/// usuall is set by rpl_complete_word().
+/// The completion string is copied by repline and does not need to be preserved or allocated.
 ///
 /// Returns `true` if the callback should continue trying to find more possible completions.
 /// If `false` is returned, the callback should try to return and not add more completions (for improved latency).
 	bool rpl_add_completion(rpl_completion_env_t * cenv,
 	                        const char *completion);
 
-/// In a completion callback (usually from rpl_complete_word()), use this function to add a completion.
+/// Use this function to add a completion in a completion callback, which in turn
+/// usuall is set by rpl_complete_word().
 /// The `display` is used to display the completion in the completion menu, and `help` is
 /// displayed for hints for example. Both can be `NULL` for the default.
 /// (all are copied by repline and do not need to be preserved or allocated).
@@ -183,7 +187,8 @@ Contents:
 	                           const char *completion, const char *display,
 	                           const char *help);
 
-/// In a completion callback (usually from rpl_complete_word()), use this function to add completions.
+/// Use this function to add a completion in a completion callback, which in turn
+/// usuall is set by rpl_complete_word().
 /// The `completions` array should be terminated with a NULL element, and all elements
 /// are added as completions if they start with `prefix`.
 ///
@@ -215,12 +220,12 @@ Contents:
 	typedef bool (rpl_is_char_class_fun_t) (const char *s, long len);
 
 /// Complete a _word_ (i.e. _token_). 
-/// Calls the user provided function `fun` to complete on the
-/// current _word_. Almost all user provided completers should use this function. 
+/// Calls the user provided function `fun` to complete the current _word_.
+/// Almost all user provided completers should use this function.
 /// If `is_word_char` is NULL, the default `&rpl_char_is_nonseparator` is used. 
 /// The `prefix` passed to `fun` is modified to only contain the current word, and 
 /// any results from `rpl_add_completion` are automatically adjusted to replace that part.
-/// For example, on the input "hello w", a the user `fun` only gets `w` and can just complete
+/// For example, on the input "hello w", the user `fun` only gets `w` and can just complete
 /// with "world" resulting in "hello world" without needing to consider `delete_before` etc.
 /// @see rpl_complete_qword() for completing quoted and escaped tokens.
 	void rpl_complete_word(rpl_completion_env_t * cenv, const char *prefix,
@@ -364,7 +369,7 @@ Contents:
 /// Returns the previous setting.
 	bool rpl_enable_completion_always_quote(bool enable);
 
-/// Disable or enable automatic identation of continuation lines in multiline
+/// Disable or enable automatic indentation of continuation lines in multiline
 /// input so it aligns with the initial prompt.
 /// Returns the previous setting.
 	bool rpl_enable_multiline_indent(bool enable);

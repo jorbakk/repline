@@ -43,6 +43,7 @@ main()
 
 	// enable completion with a default completion function
 	rpl_set_default_completer(&completer, NULL);
+	// rpl_enable_completion_always_quote(false);
 
 	// enable syntax highlighting with a highlight function
 	rpl_set_default_highlighter(highlighter, NULL);
@@ -131,10 +132,10 @@ completer(rpl_completion_env_t * cenv, const char *input)
 	                      NULL /* any extension */ );
 
 	// and also use our custom completer  
-	rpl_complete_word(cenv, input, &word_completer,
-	                  NULL
-	                  /* from default word boundary; whitespace or separator */
-	                  );
+	// rpl_complete_word(cenv, input, &word_completer,
+	                  // NULL
+	                  // /* from default word boundary; whitespace or separator */
+	                  // );
 
 	// rpl_complete_word( cenv, input, &word_completer, &rpl_char_is_idletter );        
 	// rpl_complete_qword( cenv, input, &word_completer, &rpl_char_is_idletter  );        

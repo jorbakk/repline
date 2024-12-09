@@ -803,5 +803,6 @@ rpl_complete_filename(rpl_completion_env_t * cenv, const char *prefix,
 	fclosure.extensions = extensions;
 	cenv->arg = &fclosure;
 	rpl_complete_qword_ex(cenv, prefix, &filename_completer,
-	                      &rpl_char_is_filename_letter, '\\', "'\"");
+	                      &rpl_char_is_filename_letter, 0, "'\"");
+	                      // &rpl_char_is_filename_letter, '\\', "'\"");
 }
