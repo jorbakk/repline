@@ -145,7 +145,9 @@ rpl_complete_qword_ex(rpl_completion_env_t * cenv, const char *prefix,
 	ssize_t quote_len = 0;
 
 	// 1. look for a starting quote
-	if (quote_chars[0] != 0) {
+	/// TODO disabled leading quote for now to test it for a while
+	if (false) {
+	// if (quote_chars[0] != 0) {
 		// we go forward and count all quotes; if it is uneven, we need to complete quoted.
 		ssize_t qpos_open = -1;
 		ssize_t qpos_close = -1;
@@ -182,7 +184,7 @@ rpl_complete_qword_ex(rpl_completion_env_t * cenv, const char *prefix,
 			quote = 0;
 		}
 	}
-	// 2. if we did not find a quoted word, look for non-word-chars
+	// 2. if we did not find a quoted word, look for non-word-chars and set pos accordingly
 	if (quote == 0) {
 		pos = len;
 		while (pos > 0) {
@@ -655,8 +657,8 @@ match_extension(const char *name, const char *extensions)
 }
 
 static bool
-filename_complete_indir(rpl_completion_env_t * cenv, stringbuf_t * dir,
-                        stringbuf_t * dir_prefix, stringbuf_t * display,
+filename_complete_indir(rpl_completion_env_t *cenv, stringbuf_t *dir,
+                        stringbuf_t *dir_prefix, stringbuf_t *display,
                         const char *base_prefix,
                         char dir_sep, const char *extensions)
 {

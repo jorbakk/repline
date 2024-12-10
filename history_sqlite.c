@@ -95,26 +95,6 @@ db_rc(int rc)
 	return DB_ERROR;
 }
 
-static int
-db_open(struct db_t *db, const char *fname)
-{
-	int rc = db_rc(sqlite3_open(fname, &db->dbh));
-	if (rc != DB_OK) {
-		debug_msg("Cannot open database %s: %s\n", fname,
-		          sqlite3_errmsg(db->dbh));
-	}
-	return rc;
-}
-
-static int
-db_close(struct db_t *db)
-{
-	int rc = sqlite3_close(db->dbh);
-	if (rc != SQLITE_OK)
-		return DB_ERROR;
-	return DB_OK;
-}
-
 static bool
 db_exec_str(struct db_t *db, const char *query)
 {
@@ -127,6 +107,28 @@ db_exec_str(struct db_t *db, const char *query)
 		return false;
 	}
 	return true;
+}
+
+static int
+db_open(struct db_t *db, const char *fname)
+{
+	int rc = db_rc(sqlite3_open(fname, &db->dbh));
+	if (rc != DB_OK) {
+		debug_msg("Cannot open database %s: %s\n", fname,
+		          sqlite3_errmsg(db->dbh));
+	}
+	/// Turn on case sensitive queries with like operator when searching the history
+	db_exec_str(db, "PRAGMA case_sensitive_like = true;");
+	return rc;
+}
+
+static int
+db_close(struct db_t *db)
+{
+	int rc = sqlite3_close(db->dbh);
+	if (rc != SQLITE_OK)
+		return DB_ERROR;
+	return DB_OK;
 }
 
 static bool
