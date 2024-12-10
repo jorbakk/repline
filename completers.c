@@ -734,54 +734,53 @@ filename_completer(rpl_completion_env_t * cenv, const char *prefix)
 	stringbuf_t *root_dir = sbuf_new(cenv->env->mem);
 	stringbuf_t *dir_prefix = sbuf_new(cenv->env->mem);
 	stringbuf_t *display = sbuf_new(cenv->env->mem);
-	if (root_dir != NULL && dir_prefix != NULL && display != NULL) {
-		// split prefix in dir_prefix / base.
-		const char *base = strrchr(prefix, '/');
+	if (root_dir == NULL && dir_prefix == NULL && display == NULL) return;
+	// split prefix in dir_prefix / base.
+	const char *base = strrchr(prefix, '/');
 #ifdef _WIN32
-		const char *base2 = strrchr(prefix, '\\');
-		if (base == NULL || base2 > base)
-			base = base2;
+	const char *base2 = strrchr(prefix, '\\');
+	if (base == NULL || base2 > base)
+		base = base2;
 #endif
+	if (base != NULL) {
+		base++;
+		sbuf_append_n(dir_prefix, prefix, base - prefix);   // includes dir separator
+	}
+	// absolute path
+	if (os_path_is_absolute(prefix)) {
+		// do not use roots but try to complete directly
 		if (base != NULL) {
-			base++;
-			sbuf_append_n(dir_prefix, prefix, base - prefix);   // includes dir separator
+			sbuf_append_n(root_dir, prefix, (base - prefix));   // include dir separator
 		}
-		// absolute path
-		if (os_path_is_absolute(prefix)) {
-			// do not use roots but try to complete directly
-			if (base != NULL) {
-				sbuf_append_n(root_dir, prefix, (base - prefix));   // include dir separator
+		filename_complete_indir(cenv, root_dir, dir_prefix, display,
+		                        (base != NULL ? base : prefix),
+		                        fclosure->dir_sep, fclosure->extensions);
+	} else {
+		// relative path, complete with respect to every root.
+		const char *next;
+		const char *root = fclosure->roots;
+		while (root != NULL) {
+			// create full root in `root_dir`
+			sbuf_clear(root_dir);
+			next = strchr(root, ';');
+			if (next == NULL) {
+				sbuf_append(root_dir, root);
+				root = NULL;
+			} else {
+				sbuf_append_n(root_dir, root, next - root);
+				root = next + 1;
 			}
+			sbuf_append_char(root_dir, rpl_dirsep());
+
+			// add the dir_prefix to the root
+			if (base != NULL) {
+				sbuf_append_n(root_dir, prefix, (base - prefix) - 1);
+			}
+			// and complete in this directory
 			filename_complete_indir(cenv, root_dir, dir_prefix, display,
 			                        (base != NULL ? base : prefix),
-			                        fclosure->dir_sep, fclosure->extensions);
-		} else {
-			// relative path, complete with respect to every root.
-			const char *next;
-			const char *root = fclosure->roots;
-			while (root != NULL) {
-				// create full root in `root_dir`
-				sbuf_clear(root_dir);
-				next = strchr(root, ';');
-				if (next == NULL) {
-					sbuf_append(root_dir, root);
-					root = NULL;
-				} else {
-					sbuf_append_n(root_dir, root, next - root);
-					root = next + 1;
-				}
-				sbuf_append_char(root_dir, rpl_dirsep());
-
-				// add the dir_prefix to the root
-				if (base != NULL) {
-					sbuf_append_n(root_dir, prefix, (base - prefix) - 1);
-				}
-				// and complete in this directory    
-				filename_complete_indir(cenv, root_dir, dir_prefix, display,
-				                        (base != NULL ? base : prefix),
-				                        fclosure->dir_sep,
-				                        fclosure->extensions);
-			}
+			                        fclosure->dir_sep,
+			                        fclosure->extensions);
 		}
 	}
 	sbuf_free(display);
