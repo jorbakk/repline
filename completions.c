@@ -423,7 +423,7 @@ default_filename_completer(rpl_completion_env_t * cenv, const char *prefix)
 	const char sep = '/';
 #endif
 	char *expanded = rpl_expand_envar(cenv, prefix);
-	rpl_complete_filename(cenv, prefix, sep, ".", NULL);
+	rpl_complete_filename(cenv, expanded, sep, ".", NULL);
 	/// FIXME shouldn't use free directly, but from cenv->env
 	free(expanded);
 }
