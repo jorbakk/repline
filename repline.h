@@ -215,6 +215,11 @@ Contents:
 	                           char dir_separator, const char *roots,
 	                           const char *extensions);
 
+/// Expand environment variables.
+/// All environment variables starting with '$' and ending at a word boundary are expanded
+/// using the environment of the process.
+	char *rpl_expand_envar(rpl_completion_env_t * cenv, const char *prefix);
+
 /// Function that returns whether a (utf8) character (of length `len`) is in a certain character class
 /// @see rpl_char_is_separator() etc.
 	typedef bool (rpl_is_char_class_fun_t) (const char *s, long len);

@@ -734,7 +734,7 @@ filename_completer(rpl_completion_env_t * cenv, const char *prefix)
 	stringbuf_t *root_dir = sbuf_new(cenv->env->mem);
 	stringbuf_t *dir_prefix = sbuf_new(cenv->env->mem);
 	stringbuf_t *display = sbuf_new(cenv->env->mem);
-	if (root_dir == NULL && dir_prefix == NULL && display == NULL) return;
+	if (root_dir == NULL || dir_prefix == NULL || display == NULL) return;
 	// split prefix in dir_prefix / base.
 	const char *base = strrchr(prefix, '/');
 #ifdef _WIN32
@@ -807,3 +807,16 @@ rpl_complete_filename(rpl_completion_env_t * cenv, const char *prefix,
 	                      &rpl_char_is_filename_letter, 0, "'\"");
 	                      // &rpl_char_is_filename_letter, '\\', "'\"");
 }
+
+rpl_public char *
+rpl_expand_envar(rpl_completion_env_t * cenv, const char *prefix)
+{
+	stringbuf_t *sbuf_prefix = sbuf_new(cenv->env->mem);
+	sbuf_append(sbuf_prefix, prefix);
+	debug_msg("\norig: %s\n", sbuf_string(sbuf_prefix));
+	sbuf_expand_envars(sbuf_prefix);
+	debug_msg("expanded: %s\n", sbuf_string(sbuf_prefix));
+	char *ret = sbuf_free_dup(sbuf_prefix);
+	return ret;
+}
+

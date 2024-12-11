@@ -382,6 +382,37 @@ str_find_ws_word_end(const char *s, ssize_t len, ssize_t pos)
 }
 
 //-------------------------------------------------------------
+// Environment variables in strings
+//-------------------------------------------------------------
+
+rpl_private bool
+sbuf_expand_envars(stringbuf_t *sbuf)
+{
+	bool ret = false;
+	char *c = sbuf_strdup(sbuf);
+	char *vstart = c;
+	char *vstop, *dollar;
+	while ((dollar = strchr(vstart, '$')) != NULL) {
+		vstart = dollar + 1;
+		vstop = vstart;
+		while (rpl_char_is_nonseparator(vstop, 1)) vstop++;
+		*vstop = '\0';
+		debug_msg("dollar: %ld, vstart: %ld, vstop: %ld, dollar str: %s\n", dollar - c, vstart - c, vstop - c, dollar);
+		char *e = getenv(vstart);
+		if (e) {
+			ret = true;
+			sbuf_delete_at(sbuf, vstart - c - 1, vstop - vstart + 1);
+			sbuf_insert_at_n(sbuf, e, strlen(e) + 1, vstart - c - 1);
+			free(c);
+			c = sbuf_strdup(sbuf);
+			vstart = c;
+		}
+	}
+	free(c);
+	return ret;
+}
+
+//-------------------------------------------------------------
 // String row/column iteration
 //-------------------------------------------------------------
 

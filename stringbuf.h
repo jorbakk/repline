@@ -71,6 +71,9 @@ rpl_private ssize_t sbuf_find_word_end(stringbuf_t * sbuf, ssize_t pos);
 rpl_private ssize_t sbuf_find_ws_word_start(stringbuf_t * sbuf, ssize_t pos);
 rpl_private ssize_t sbuf_find_ws_word_end(stringbuf_t * sbuf, ssize_t pos);
 
+/// Expand environment variables
+rpl_private bool sbuf_expand_envars(stringbuf_t *sbuf);
+
 // parse a decimal 
 rpl_private bool rpl_atoz(const char *s, ssize_t * i);
 // parse two decimals separated by a semicolon

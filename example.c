@@ -8,6 +8,7 @@
 #include <locale.h>
 
 #include "repline.h"
+#include "stringbuf.h"
 
 // completion function defined below
 static void completer(rpl_completion_env_t * cenv, const char *prefix);
@@ -49,7 +50,7 @@ main()
 	rpl_set_default_highlighter(highlighter, NULL);
 
 	// try to auto complete after a completion as long as the completion is unique
-	// rpl_enable_auto_tab(true );
+	// rpl_enable_auto_tab(true);
 
 	// inline hinting is enabled by default
 	// rpl_enable_hint(false);
@@ -127,9 +128,13 @@ word_completer(rpl_completion_env_t * cenv, const char *word)
 static void
 completer(rpl_completion_env_t * cenv, const char *input)
 {
+	char *expanded = rpl_expand_envar(cenv, input);
+
 	// try to complete file names from the roots "." and "/usr/local"
-	rpl_complete_filename(cenv, input, 0, ".;/usr/local;c:\\Program Files",
+	rpl_complete_filename(cenv, expanded, 0, ".;/usr/local;c:\\Program Files",
+	// rpl_complete_filename(cenv, input, 0, ".;/usr/local;c:\\Program Files",
 	                      NULL /* any extension */ );
+	free(expanded);
 
 	// and also use our custom completer  
 	// rpl_complete_word(cenv, input, &word_completer,
