@@ -1038,7 +1038,7 @@ edit_insert_unicode(rpl_env_t * env, editor_t * eb, unicode_t u)
 static void
 edit_auto_brace(rpl_env_t * env, editor_t * eb, char c)
 {
-	if (env->no_autobrace)
+	if (!env->autobrace)
 		return;
 	const char *braces = rpl_env_get_auto_braces(env);
 	for (const char *b = braces; *b != 0; b += 2) {

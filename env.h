@@ -42,7 +42,7 @@ struct rpl_env_s {
 	bool no_hint;               // allow hinting?
 	bool no_highlight;          // enable highlighting?
 	bool no_bracematch;         // enable brace matching?
-	bool no_autobrace;          // enable automatic brace insertion?
+	bool autobrace;             // enable automatic brace insertion?
 	bool no_lscolors;           // use LSCOLORS/LS_COLORS to colorize file name completions?
 	long hint_delay;            // delay before displaying a hint in milliseconds
 };

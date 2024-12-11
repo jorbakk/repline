@@ -412,7 +412,8 @@ completions_generate(struct rpl_env_s *env, completions_t * cms,
 	return completions_count(cms);
 }
 
-// The default completer is no completion is set
+// The default completer is no completion is environment variable expansion
+// and filename completion
 static void
 default_filename_completer(rpl_completion_env_t * cenv, const char *prefix)
 {
@@ -421,5 +422,8 @@ default_filename_completer(rpl_completion_env_t * cenv, const char *prefix)
 #else
 	const char sep = '/';
 #endif
+	char *expanded = rpl_expand_envar(cenv, prefix);
 	rpl_complete_filename(cenv, prefix, sep, ".", NULL);
+	/// FIXME shouldn't use free directly, but from cenv->env
+	free(expanded);
 }

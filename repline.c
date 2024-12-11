@@ -440,9 +440,9 @@ rpl_enable_brace_insertion(bool enable)
 	rpl_env_t *env = rpl_get_env();
 	if (env == NULL)
 		return false;
-	bool prev = env->no_autobrace;
-	env->no_autobrace = !enable;
-	return !prev;
+	bool prev = env->autobrace;
+	env->autobrace = enable;
+	return prev;
 }
 
 rpl_public void

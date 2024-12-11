@@ -43,11 +43,11 @@ main()
 #endif
 
 	// enable completion with a default completion function
-	rpl_set_default_completer(&completer, NULL);
+	// rpl_set_default_completer(&completer, NULL);
 	// rpl_enable_completion_always_quote(false);
 
 	// enable syntax highlighting with a highlight function
-	rpl_set_default_highlighter(highlighter, NULL);
+	// rpl_set_default_highlighter(highlighter, NULL);
 
 	// try to auto complete after a completion as long as the completion is unique
 	// rpl_enable_auto_tab(true);
@@ -56,7 +56,7 @@ main()
 	// rpl_enable_hint(false);
 
 	/// Disable insertion of braces
-	rpl_enable_brace_insertion(false);
+	// rpl_enable_brace_insertion(false);
 
 	// enable printing prompt and marker on separate lines
 	rpl_enable_twoline_prompt(true);
@@ -126,7 +126,7 @@ word_completer(rpl_completion_env_t * cenv, const char *word)
 // We use `rpl_complete_word` to only consider the final token on the input. 
 // (almost all user defined completers should use this)
 static void
-completer(rpl_completion_env_t * cenv, const char *input)
+completer(rpl_completion_env_t *cenv, const char *input)
 {
 	char *expanded = rpl_expand_envar(cenv, input);
 
@@ -134,6 +134,7 @@ completer(rpl_completion_env_t * cenv, const char *input)
 	rpl_complete_filename(cenv, expanded, 0, ".;/usr/local;c:\\Program Files",
 	// rpl_complete_filename(cenv, input, 0, ".;/usr/local;c:\\Program Files",
 	                      NULL /* any extension */ );
+	/// FIXME shouldn't use free directly, but from cenv->env
 	free(expanded);
 
 	// and also use our custom completer  
