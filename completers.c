@@ -206,8 +206,7 @@ rpl_complete_qword_ex(rpl_completion_env_t * cenv, const char *prefix,
 	// if (len == pos) return;
 
 	// allocate new unescaped word prefix
-	char *word =
-	    mem_strndup(cenv->env->mem, prefix + pos,
+	char *word = mem_strndup(cenv->env->mem, prefix + pos,
 	                (quote == 0 ? len - pos : quote_len));
 	if (word == NULL)
 		return;

@@ -44,6 +44,7 @@ main()
 
 	// enable completion with a default completion function
 	// rpl_set_default_completer(&completer, NULL);
+
 	// rpl_enable_completion_always_quote(false);
 
 	// enable syntax highlighting with a highlight function
@@ -134,8 +135,7 @@ completer(rpl_completion_env_t *cenv, const char *input)
 	rpl_complete_filename(cenv, expanded, 0, ".;/usr/local;c:\\Program Files",
 	// rpl_complete_filename(cenv, input, 0, ".;/usr/local;c:\\Program Files",
 	                      NULL /* any extension */ );
-	/// FIXME shouldn't use free directly, but from cenv->env
-	free(expanded);
+	rpl_free(expanded);
 
 	// and also use our custom completer  
 	// rpl_complete_word(cenv, input, &word_completer,

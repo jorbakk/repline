@@ -397,12 +397,12 @@ sbuf_expand_envars(stringbuf_t *sbuf)
 		vstop = vstart;
 		while (rpl_char_is_nonseparator(vstop, 1)) vstop++;
 		*vstop = '\0';
-		debug_msg("dollar: %ld, vstart: %ld, vstop: %ld, dollar str: %s\n", dollar - c, vstart - c, vstop - c, dollar);
 		char *e = getenv(vstart);
+		debug_msg("dollar: %ld, vstart: %ld, vstop: %ld, dollar str: %s, envar: %s\n", dollar - c, vstart - c, vstop - c, dollar, e);
 		if (e) {
 			ret = true;
-			sbuf_delete_at(sbuf, vstart - c - 1, vstop - vstart + 1);
-			sbuf_insert_at_n(sbuf, e, strlen(e) + 1, vstart - c - 1);
+			sbuf_delete_at(sbuf, vstart - 1 - c, vstop - vstart + 1);
+			sbuf_insert_at_n(sbuf, e, strlen(e) + 1, vstart - 1 - c);
 			free(c);
 			c = sbuf_strdup(sbuf);
 			vstart = c;

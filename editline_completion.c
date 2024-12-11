@@ -7,8 +7,7 @@ static bool
 edit_complete(rpl_env_t * env, editor_t * eb, ssize_t idx)
 {
 	editor_start_modify(eb);
-	ssize_t newpos =
-	    completions_apply(env->completions, idx, eb->input, eb->pos);
+	ssize_t newpos = completions_apply(env->completions, idx, eb->input, eb->pos);
 	if (newpos < 0) {
 		editor_undo_restore(eb, false);
 		return false;
@@ -298,8 +297,7 @@ edit_generate_completions(rpl_env_t * env, editor_t * eb, bool autotab)
 	debug_msg("edit: complete: %zd: %s\n", eb->pos, sbuf_string(eb->input));
 	if (eb->pos < 0)
 		return;
-	ssize_t count =
-	    completions_generate(env, env->completions, sbuf_string(eb->input),
+	ssize_t count = completions_generate(env, env->completions, sbuf_string(eb->input),
 	                         eb->pos, RPL_MAX_COMPLETIONS_TO_TRY);
 	bool more_available = (count >= RPL_MAX_COMPLETIONS_TO_TRY);
 	if (count <= 0) {

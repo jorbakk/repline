@@ -167,7 +167,7 @@ Contents:
 	void rpl_set_default_completer(rpl_completer_fun_t * completer, void *arg);
 
 /// Use this function to add a completion in a completion callback, which in turn
-/// usuall is set by rpl_complete_word().
+/// usually is set by rpl_complete_word().
 /// The completion string is copied by repline and does not need to be preserved or allocated.
 ///
 /// Returns `true` if the callback should continue trying to find more possible completions.
