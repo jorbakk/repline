@@ -19,8 +19,11 @@
 #include "editline.c"
 #include "highlight.c"
 #include "undo.c"
-// # include "history.c"
+#ifdef RPL_HIST_IMPL_SQLITE
 #include "history_sqlite.c"
+#else
+#include "history.c"
+#endif
 #include "completers.c"
 #include "completions.c"
 #include "term.c"
@@ -301,17 +304,6 @@ rpl_history_close(void)
 	if (env == NULL)
 		return;
 	history_close(env->history);
-}
-
-rpl_public bool
-rpl_enable_auto_tab(bool enable)
-{
-	rpl_env_t *env = rpl_get_env();
-	if (env == NULL)
-		return false;
-	bool prev = env->complete_autotab;
-	env->complete_autotab = enable;
-	return prev;
 }
 
 rpl_public bool

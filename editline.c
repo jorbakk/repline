@@ -586,49 +586,13 @@ edit_refresh_hint(rpl_env_t * env, editor_t * eb)
 		if (env->no_hint)
 			return;
 	}
-	// and see if we can construct a hint (displayed after a delay)
-	ssize_t count =
-	    completions_generate(env, env->completions, sbuf_string(eb->input),
-	                         eb->pos, 2);
-	if (count == 1) {
-		const char *help = NULL;
-		const char *hint = completions_get_hint(env->completions, 0, &help);
-		if (hint != NULL) {
-			sbuf_replace(eb->hint, hint);
-			editor_append_hint_help(eb, help);
-			// do auto-tabbing?
-			if (env->complete_autotab) {
-				stringbuf_t *sb = sbuf_new(env->mem);   // temporary buffer for completion
-				if (sb != NULL) {
-					sbuf_replace(sb, sbuf_string(eb->input));
-					ssize_t pos = eb->pos;
-					const char *extra_hint = hint;
-					do {
-						ssize_t newpos = sbuf_insert_at(sb, extra_hint, pos);
-						if (newpos <= pos)
-							break;
-						pos = newpos;
-						count =
-						    completions_generate(env, env->completions,
-						                         sbuf_string(sb), pos, 2);
-						if (count == 1) {
-							const char *extra_help = NULL;
-							extra_hint =
-							    completions_get_hint(env->completions, 0,
-							                         &extra_help);
-							if (extra_hint != NULL) {
-								editor_append_hint_help(eb, extra_help);
-								sbuf_append(eb->hint, extra_hint);
-							}
-						}
-					}
-					while (count == 1);
-					sbuf_free(sb);
-				}
-			}
-		}
-	}
+	const char *help = NULL;
+	const char *hint = completions_get_hint(env->completions, 0, &help);
+	if (hint != NULL) {
+		sbuf_replace(eb->hint, hint);
+		editor_append_hint_help(eb, help);
 
+	}
 	if (env->hint_delay <= 0) {
 		// refresh with hint directly
 		edit_refresh(env, eb);
@@ -1249,7 +1213,7 @@ edit_line(rpl_env_t * env, const char *prompt_text)
 		if ((c == KEY_RIGHT || c == KEY_END) && had_hint) {
 			debug_msg("OTHER KEY_RIGHT\n");
 			edit_move_hint_to_input(env, &eb);
-			// edit_generate_completions(env, &eb, true);
+			// edit_generate_completions(env, &eb);
 			c = KEY_NONE;
 		}
 #endif
@@ -1289,14 +1253,11 @@ edit_line(rpl_env_t * env, const char *prompt_text)
 			case KEY_EVENT_RESIZE: // not used
 				edit_resize(env, &eb);
 				break;
-			case KEY_EVENT_AUTOTAB:
-				edit_generate_completions(env, &eb, true);
-				break;
 
 				// completion, history, help, undo
 			case KEY_TAB:
 			case WITH_ALT('?'):
-				edit_generate_completions(env, &eb, false);
+				edit_generate_completions(env, &eb);
 				break;
 			case WITH_ALT('.'):
 				edit_history_prev_word(env, &eb);
@@ -1331,7 +1292,7 @@ edit_line(rpl_env_t * env, const char *prompt_text)
 				debug_msg("KEY_RIGHT\n");
 				if (eb.pos == sbuf_len(eb.input)) {
 					edit_move_hint_to_input(env, &eb);
-					// edit_generate_completions( env, &eb, false );
+					// edit_generate_completions( env, &eb);
 				} else {
 					edit_cursor_right(env, &eb);
 				}
@@ -1364,7 +1325,7 @@ edit_line(rpl_env_t * env, const char *prompt_text)
 				if (eb.pos == sbuf_len(eb.input)) {
 					edit_move_word_hint_to_input(env, &eb);
 					// edit_move_hint_to_input(env, &eb);
-					// edit_generate_completions( env, &eb, false );
+					// edit_generate_completions( env, &eb);
 				} else {
 					edit_cursor_next_word(env, &eb);
 				}

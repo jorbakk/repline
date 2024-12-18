@@ -242,9 +242,6 @@ edit_completion_menu(rpl_env_t * env, editor_t * eb, bool more_available)
 		assert(selected < count);
 		c = 0;
 		edit_complete(env, eb, selected);
-		if (env->complete_autotab) {
-			tty_code_pushback(env->tty, KEY_EVENT_AUTOTAB); // immediately try to complete again        
-		}
 	} else if (!env->complete_nopreview && !code_is_virt_key(c)) {
 		// if in preview mode, select the current entry and exit the menu
 		assert(selected < count);
@@ -292,7 +289,7 @@ edit_completion_menu(rpl_env_t * env, editor_t * eb, bool more_available)
 }
 
 static void
-edit_generate_completions(rpl_env_t * env, editor_t * eb, bool autotab)
+edit_generate_completions(rpl_env_t *env, editor_t *eb)
 {
 	debug_msg("edit: complete: %zd: %s\n", eb->pos, sbuf_string(eb->input));
 	if (eb->pos < 0)
@@ -302,14 +299,10 @@ edit_generate_completions(rpl_env_t * env, editor_t * eb, bool autotab)
 	bool more_available = (count >= RPL_MAX_COMPLETIONS_TO_TRY);
 	if (count <= 0) {
 		// no completions
-		if (!autotab) {
-			term_beep(env->term);
-		}
+		term_beep(env->term);
 	} else if (count == 1) {
 		// complete if only one match    
-		if (edit_complete(env, eb, 0 /*idx */ ) && env->complete_autotab) {
-			tty_code_pushback(env->tty, KEY_EVENT_AUTOTAB);
-		}
+		edit_complete(env, eb, 0 /*idx */ );
 	} else {
 		//term_beep(env->term); 
 		if (!more_available) {

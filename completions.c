@@ -387,7 +387,7 @@ rpl_set_default_completer(rpl_completer_fun_t * completer, void *arg)
 }
 
 rpl_private ssize_t
-completions_generate(struct rpl_env_s *env, completions_t * cms,
+completions_generate(struct rpl_env_s *env, completions_t *cms,
                      const char *input, ssize_t pos, ssize_t max)
 {
 	completions_clear(cms);
@@ -397,7 +397,8 @@ completions_generate(struct rpl_env_s *env, completions_t * cms,
 	// set up env
 	rpl_completion_env_t cenv;
 	cenv.env = env;
-	cenv.input = input, cenv.cursor = (long)pos;
+	cenv.input = input;
+	cenv.cursor = (long)pos;
 	cenv.arg = cms->completer_arg;
 	cenv.complete = &prim_add_completion;
 	cenv.closure = NULL;
@@ -412,17 +413,36 @@ completions_generate(struct rpl_env_s *env, completions_t * cms,
 	return completions_count(cms);
 }
 
-// The default completer is no completion is environment variable expansion
-// and filename completion
+extern char **environ;
+
+void
+printenv()
+{
+	char **s = environ;
+	for (; *s; s++) {
+		printf("%s\n", *s);
+	}
+	printf("\n");
+}
+
+
+// The default completer is environment-variable-expansion and filename-completion
 static void
 default_filename_completer(rpl_completion_env_t * cenv, const char *prefix)
 {
+	// printenv();
+	// printf("\ndefault filename completer\n");
+
 #ifdef _WIN32
 	const char sep = '\\';
 #else
 	const char sep = '/';
 #endif
-	char *expanded = rpl_expand_envar(cenv, prefix);
-	rpl_complete_filename(cenv, expanded, sep, ".", NULL);
-	rpl_free(expanded);
+	rpl_complete_filename(cenv, prefix, sep, ".", NULL);
+
+	// char *expanded = rpl_expand_envar(cenv, prefix);
+	// rpl_complete_filename(cenv, expanded, sep, ".", NULL);
+	// rpl_free(expanded);
+
+	// rpl_complete_envar(cenv, prefix);
 }

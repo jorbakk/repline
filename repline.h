@@ -220,6 +220,11 @@ Contents:
 /// using the environment of the process.
 	char *rpl_expand_envar(rpl_completion_env_t * cenv, const char *prefix);
 
+/// Complete environment variables.
+/// All environment variables starting with '$' and ending at a word boundary are expanded
+/// using the environment of the process and completer is called.
+	void rpl_complete_envar(rpl_completion_env_t *cenv, const char *prefix);
+
 /// Function that returns whether a (utf8) character (of length `len`) is in a certain character class
 /// @see rpl_char_is_separator() etc.
 	typedef bool (rpl_is_char_class_fun_t) (const char *s, long len);
@@ -360,11 +365,6 @@ Contents:
 /// Disable or enable color output (enabled by default).
 /// Returns the previous setting.
 	bool rpl_enable_color(bool enable);
-
-/// Disable or enable automatic tab completion after a completion 
-/// to expand as far as possible if the completions are unique. (disabled by default).
-/// Returns the previous setting.
-	bool rpl_enable_auto_tab(bool enable);
 
 /// Disable or enable preview of a completion selection (enabled by default)
 /// Returns the previous setting.

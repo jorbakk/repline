@@ -725,7 +725,7 @@ typedef struct filename_closure_s {
 } filename_closure_t;
 
 static void
-filename_completer(rpl_completion_env_t * cenv, const char *prefix)
+filename_completer(rpl_completion_env_t *cenv, const char *prefix)
 {
 	if (prefix == NULL)
 		return;
@@ -817,5 +817,38 @@ rpl_expand_envar(rpl_completion_env_t * cenv, const char *prefix)
 	debug_msg("expanded: %s\n", sbuf_string(sbuf_prefix));
 	char *ret = sbuf_free_dup(sbuf_prefix);
 	return ret;
+}
+
+rpl_public void
+rpl_complete_envar(rpl_completion_env_t *cenv, const char *prefix)
+{
+	stringbuf_t *sbuf_prefix = sbuf_new(cenv->env->mem);
+	sbuf_append(sbuf_prefix, prefix);
+	debug_msg("\norig: %s\n", sbuf_string(sbuf_prefix));
+	sbuf_expand_envars(sbuf_prefix);
+	debug_msg("expanded: %s\n", sbuf_string(sbuf_prefix));
+
+	// set up the closure
+	word_closure_t wenv;
+	// wenv.delete_before_adjust = (long)(len - pos);
+	wenv.prev_complete = cenv->complete;
+	wenv.prev_env = cenv->env;
+	cenv->complete = &token_add_completion_ex;
+	cenv->closure = &wenv;
+
+#ifdef _WIN32
+	const char sep = '\\';
+#else
+	const char sep = '/';
+#endif
+	// and call the user completion routine
+	// (*fun) (cenv, prefix + pos);
+	// (*fun) (cenv, sbuf_string(sbuf_prefix));
+	rpl_complete_filename(cenv, sbuf_string(sbuf_prefix), sep, ".", NULL);
+	sbuf_free(sbuf_prefix);
+
+	// restore the original environment
+	cenv->complete = wenv.prev_complete;
+	cenv->closure = wenv.prev_env;
 }
 
