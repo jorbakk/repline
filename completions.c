@@ -16,8 +16,6 @@ typedef struct completion_s {
 	const char *replacement;
 	const char *display;
 	const char *help;
-	ssize_t delete_before;
-	ssize_t delete_after;
 } completion_t;
 
 struct completions_s {
@@ -77,8 +75,7 @@ completions_clear(completions_t * cms)
 
 static void
 completions_push(completions_t * cms, const char *replacement,
-                 const char *display, const char *help, ssize_t delete_before,
-                 ssize_t delete_after)
+                 const char *display, const char *help)
 {
 	if (cms->count >= cms->len) {
 		ssize_t newlen = (cms->len <= 0 ? 32 : cms->len * 2);
@@ -94,8 +91,9 @@ completions_push(completions_t * cms, const char *replacement,
 	cm->replacement = mem_strdup(cms->mem, replacement);
 	cm->display = mem_strdup(cms->mem, display);
 	cm->help = mem_strdup(cms->mem, help);
-	cm->delete_before = delete_before;
-	cm->delete_after = delete_after;
+	/// FIXME is this needed?
+	// cm->delete_before = delete_before;
+	// cm->delete_after = delete_after;
 	cms->count++;
 }
 
@@ -119,16 +117,14 @@ completions_contains(completions_t * cms, const char *replacement)
 
 rpl_private bool
 completions_add(completions_t * cms, const char *replacement,
-                const char *display, const char *help, ssize_t delete_before,
-                ssize_t delete_after)
+                const char *display, const char *help)
 {
 	if (cms->completer_max <= 0)
 		return false;
 	cms->completer_max--;
 	//debug_msg("completion: add: %d,%d, %s\n", delete_before, delete_after, replacement);
 	if (!completions_contains(cms, replacement)) {
-		completions_push(cms, replacement, display, help, delete_before,
-		                 delete_after);
+		completions_push(cms, replacement, display, help);
 	}
 	return true;
 }
@@ -175,9 +171,12 @@ completions_get_hint(completions_t * cms, ssize_t index, const char **help)
 	if (cm == NULL)
 		return NULL;
 	ssize_t len = rpl_strlen(cm->replacement);
-	if (len < cm->delete_before)
-		return NULL;
-	const char *hint = (cm->replacement + cm->delete_before);
+	/// FIXME is this needed?
+	// if (len < cm->delete_before)
+		// return NULL;
+	// const char *hint = (cm->replacement + cm->delete_before);
+	/// FIXME is this a good replacement?
+	const char *hint = (cm->replacement + cms->cut_start);
 	if (*hint == 0 || utf8_is_cont((uint8_t) (*hint)))
 		return NULL;            // utf8 boundary?
 	if (help != NULL) {
@@ -221,28 +220,6 @@ rpl_stop_completing(const rpl_completion_env_t * cenv)
 }
 
 #ifdef NEW_COMPLETIONS
-static ssize_t
-new_completion_apply(completion_t *cm, stringbuf_t *sbuf, ssize_t pos)
-{
-	if (cm == NULL)
-		return -1;
-	debug_msg("completion: apply: %s at %zd\n", cm->replacement, pos);
-	// ssize_t start = pos - cm->delete_before;
-	ssize_t start = cm->delete_before;
-	if (start < 0)
-		start = 0;
-	ssize_t n = cm->delete_before + cm->delete_after;
-	if (rpl_strlen(cm->replacement) == n
-	    && strncmp(sbuf_string_at(sbuf, start), cm->replacement,
-	               to_size_t(n)) == 0) {
-		// no changes
-		return -1;
-	} else {
-		// sbuf_delete_from_to(sbuf, start, pos + cm->delete_after);
-		sbuf_delete_from_to(sbuf, start, cm->delete_after);
-		return sbuf_insert_at(sbuf, cm->replacement, start);
-	}
-}
 #else
 static ssize_t
 completion_apply(completion_t * cm, stringbuf_t * sbuf, ssize_t pos)
@@ -315,6 +292,8 @@ completions_sort(completions_t * cms)
 
 #define RPL_MAX_PREFIX  (256)
 
+#ifdef NEW_COMPLETIONS
+#else
 // find longest common prefix and complete with that.
 rpl_private ssize_t
 completions_apply_longest_prefix(completions_t * cms, stringbuf_t * sbuf,
@@ -362,11 +341,7 @@ completions_apply_longest_prefix(completions_t * cms, stringbuf_t * sbuf,
 	memset(&cprefix, 0, sizeof(cprefix));
 	cprefix.delete_before = delete_before;
 	cprefix.replacement = prefix;
-#ifdef NEW_COMPLETIONS
-	ssize_t newpos = new_completion_apply(&cprefix, sbuf, pos);
-#else
 	ssize_t newpos = completion_apply(&cprefix, sbuf, pos);
-#endif
 	if (newpos < 0)
 		return newpos;
 
@@ -378,6 +353,7 @@ completions_apply_longest_prefix(completions_t * cms, stringbuf_t * sbuf,
 
 	return newpos;
 }
+#endif
 
 //-------------------------------------------------------------
 // Completer functions
@@ -425,8 +401,7 @@ prim_add_completion(rpl_env_t * env, void *funenv, const char *replacement,
                     long delete_after)
 {
 	rpl_unused(funenv);
-	return completions_add(env->completions, replacement, display, help,
-	                       delete_before, delete_after);
+	return completions_add(env->completions, replacement, display, help);
 }
 
 rpl_public void
@@ -549,8 +524,8 @@ new_filename_completer(rpl_env_t *env, editor_t *eb)
 					}
 				}
 				const char *help = "";
-                int delete_before = env->completions->cut_start;
-                int delete_after = env->completions->cut_stop;
+                // int delete_before = env->completions->cut_start;
+                // int delete_after = env->completions->cut_stop;
                 /// Append '/' if fname is a directory
 				stringbuf_t *fname_str = sbuf_new(env->mem);
 				sbuf_append(fname_str, fname);
@@ -565,7 +540,7 @@ new_filename_completer(rpl_env_t *env, editor_t *eb)
 				};
 				cont = completions_add(env->completions,
 				                      sbuf_string(fname_str), sbuf_string(fname_str),
-				                      help, delete_before, delete_after);
+				                      help);
 				sbuf_free(fname_str);
 			}
 		} while (cont && os_findnext(d, &entry));

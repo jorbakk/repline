@@ -18,8 +18,7 @@ rpl_private completions_t *new_completions(alloc_t * mem);
 rpl_private void completions_free(completions_t * cms);
 rpl_private void completions_clear(completions_t * cms);
 rpl_private bool completions_add(completions_t * cms, const char *replacement,
-                                 const char *display, const char *help,
-                                 ssize_t delete_before, ssize_t delete_after);
+                                 const char *display, const char *help);
 rpl_private ssize_t completions_count(completions_t * cms);
 #ifdef NEW_COMPLETIONS
 rpl_private void new_completions_generate(struct rpl_env_s *env,

@@ -18,6 +18,8 @@ edit_complete(rpl_env_t * env, editor_t * eb, ssize_t idx)
 	return true;
 }
 
+#ifdef NEW_COMPLETIONS
+#else
 static bool
 edit_complete_longest_prefix(rpl_env_t * env, editor_t * eb)
 {
@@ -33,6 +35,7 @@ edit_complete_longest_prefix(rpl_env_t * env, editor_t * eb)
 	edit_refresh(env, eb);
 	return true;
 }
+#endif
 
 rpl_private void
 sbuf_append_tagged(stringbuf_t * sb, const char *tag, const char *content)
@@ -309,14 +312,6 @@ new_edit_generate_completions(rpl_env_t *env, editor_t *eb)
 		// complete if only one match
 		edit_complete(env, eb, 0);
 	} else {
-		/// TODO new implementation with more than one completion available
-		/// ... it somehow works better when removing edit_complete_longest_prefix()
-		/// with the new implementation
-		/// the difference is that the current word is not completed up to the common
-		/// prefix of all available completions
-		// if (!more_available) {
-			// edit_complete_longest_prefix(env, eb);
-		// }
 		completions_sort(env->completions);
 		edit_completion_menu(env, eb, more_available);
 	}
