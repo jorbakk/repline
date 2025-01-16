@@ -505,7 +505,7 @@ new_filename_completer(rpl_env_t *env, const char *input, ssize_t pos)
 			// printf("dir entry: \"%s\"\n", fname);
 			if (fname != NULL &&
 			    strcmp(fname, ".") != 0 &&
-			    strcmp(fname, "..") != 0 &&
+			    // strcmp(fname, "..") != 0 &&
 			    strlen(fname) >= fname_prefix.stop - fname_prefix.start &&
 			    strncmp(fname, fname_prefix.start, fname_prefix.stop - fname_prefix.start) == 0)
 			{
