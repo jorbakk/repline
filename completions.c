@@ -520,6 +520,10 @@ new_filename_completer(rpl_env_t *env, const char *input, ssize_t pos)
 				if (os_is_dir(full_path)) {
 					sbuf_append_char(fname_str, rpl_dirsep());
 				}
+				if (str_find_forward(fname, strlen(fname), 0, &rpl_char_is_white, true) > 0) {
+					sbuf_insert_char_at(fname_str, '\'', 0);
+					sbuf_append_char(fname_str, '\'');
+				};
 				cont = completions_add(env->completions,
 				                      sbuf_string(fname_str), sbuf_string(fname_str),
 				                      help, delete_before, delete_after);
