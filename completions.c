@@ -508,15 +508,15 @@ new_filename_completer(rpl_env_t *env, const char *input, ssize_t pos)
 			    strlen(fname) >= fname_prefix.stop - fname_prefix.start &&
 			    strncmp(fname, fname_prefix.start, fname_prefix.stop - fname_prefix.start) == 0)
 			{
-				// printf("MATCH: \"%s\"\n", fname);
-				// const char *help = "__help__";           /// Fake entry
-				const char *help = "";                      /// Empty help
+				const char *help = "";
                 int delete_before = env->completions->cut_start;
                 int delete_after = env->completions->cut_stop;
                 /// Append '/' if fname is a directory
 				stringbuf_t *fname_str = sbuf_new(env->mem);
 				sbuf_append(fname_str, fname);
-				if (os_is_dir(fname)) {
+				char full_path[256];
+				sprintf(full_path, "%s%s", dirname_str, fname);
+				if (os_is_dir(full_path)) {
 					sbuf_append_char(fname_str, rpl_dirsep());
 				}
 				cont = completions_add(env->completions,
