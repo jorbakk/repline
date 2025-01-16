@@ -252,7 +252,7 @@ edit_completion_menu(rpl_env_t * env, editor_t * eb, bool more_available)
 		if (more_available) {
 			// generate all entries (up to the max (= 1000))
 #ifdef NEW_COMPLETIONS
-		    new_completions_generate(env, sbuf_string(eb->input), eb->pos,
+		    new_completions_generate(env, eb,
 		                         RPL_MAX_COMPLETIONS_TO_SHOW);
 			count = completions_count(env->completions);
 #else
@@ -299,7 +299,7 @@ static void
 new_edit_generate_completions(rpl_env_t *env, editor_t *eb)
 {
 	// printf("edit buffer before: '%s', pos: %ld\n", sbuf_string(eb->input), eb->pos);
-	new_completions_generate(env, sbuf_string(eb->input), eb->pos, RPL_MAX_COMPLETIONS_TO_TRY);
+	new_completions_generate(env, eb, RPL_MAX_COMPLETIONS_TO_TRY);
 	// print_completions(env);
 	bool more_available = (completions_count(env->completions) >= RPL_MAX_COMPLETIONS_TO_TRY);
 	if (completions_count(env->completions) <= 0) {

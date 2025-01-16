@@ -268,12 +268,25 @@ completion_apply(completion_t * cm, stringbuf_t * sbuf, ssize_t pos)
 
 
 rpl_private ssize_t
-completions_apply(completions_t * cms, ssize_t index, stringbuf_t * sbuf,
+completions_apply(completions_t *cms, ssize_t index, stringbuf_t *sbuf,
                   ssize_t pos)
 {
 	completion_t *cm = completions_get(cms, index);
 #ifdef NEW_COMPLETIONS
-	return new_completion_apply(cm, sbuf, pos);
+	if (cm == NULL)
+		return -1;
+	debug_msg("completion: apply: %s at %zd\n", cm->replacement, pos);
+	if (cms->cut_start < 0)
+		cms->cut_start = 0;
+	ssize_t n = cms->cut_start + cms->cut_stop;
+	if (rpl_strlen(cm->replacement) == n
+	    && strncmp(sbuf_string_at(sbuf, cms->cut_start), cm->replacement,
+	               to_size_t(n)) == 0) {
+		return -1;
+	} else {
+		sbuf_delete_from_to(sbuf, cms->cut_start, cms->cut_stop);
+		return sbuf_insert_at(sbuf, cm->replacement, cms->cut_start);
+	}
 #else
 	return completion_apply(cm, sbuf, pos);
 #endif
@@ -480,11 +493,12 @@ get_first_diffchar(const char *first, const char *second)
 
 
 static void
-new_filename_completer(rpl_env_t *env, const char *input, ssize_t pos)
+new_filename_completer(rpl_env_t *env, editor_t *eb)
 {
+	const char *input = sbuf_string(eb->input);
 	if (input == NULL)
 		return;
-
+	ssize_t pos = eb->pos;
 	/// New way to find the boundaries for cutting out and replacing the word to be
 	/// completed.
 	stringview_t word = get_word(input, pos, rpl_char_is_white);
@@ -557,19 +571,21 @@ new_filename_completer(rpl_env_t *env, const char *input, ssize_t pos)
 		} while (cont && os_findnext(d, &entry));
 		os_findclose(d);
 	}
-	if (pref_intersec[0] > 0) {
-		// printf("COMMON PREFIX: %s\n", pref_intersec);
-		/// TODO append common prefix to edit buffer and modify env->completions->cut_start
+	ssize_t pref_intersec_len = strlen(pref_intersec);
+	if (pref_intersec_len > 0) {
+		sbuf_append(eb->input, pref_intersec + strlen(fname_prefix_str));
+		eb->pos += pref_intersec_len - strlen(fname_prefix_str);
+		env->completions->cut_stop -= strlen(fname_prefix_str) - pref_intersec_len;
 	}
 }
 
 
 void
-new_completions_generate(struct rpl_env_s *env, const char *input, ssize_t pos, ssize_t max)
+new_completions_generate(struct rpl_env_s *env, editor_t *eb, ssize_t max)
 {
 	completions_clear(env->completions);
 	env->completions->completer_max = max;
-	new_filename_completer(env, input, pos);
+	new_filename_completer(env, eb);
 }
 
 #else

@@ -12,6 +12,7 @@
 #define RPL_MAX_COMPLETIONS_TO_TRY   (RPL_MAX_COMPLETIONS_TO_SHOW/4)
 
 typedef struct completions_s completions_t;
+typedef struct editor_s editor_t;
 
 rpl_private completions_t *new_completions(alloc_t * mem);
 rpl_private void completions_free(completions_t * cms);
@@ -22,8 +23,8 @@ rpl_private bool completions_add(completions_t * cms, const char *replacement,
 rpl_private ssize_t completions_count(completions_t * cms);
 #ifdef NEW_COMPLETIONS
 rpl_private void new_completions_generate(struct rpl_env_s *env,
-                                         const char *input,
-                                         ssize_t pos, ssize_t max);
+                                         editor_t *eb,
+                                         ssize_t max);
 #else
 rpl_private ssize_t completions_generate(struct rpl_env_s *env,
                                          completions_t * cms, const char *input,
