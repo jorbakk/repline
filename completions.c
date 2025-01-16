@@ -466,6 +466,19 @@ get_word_from_view(stringview_t input, ssize_t pos, rpl_is_char_class_fun_t *del
 }
 
 
+ssize_t
+get_first_diffchar(const char *first, const char *second)
+{
+	ssize_t first_len = strlen(first);
+	ssize_t secnd_len = strlen(second);
+	ssize_t min_len = first_len < secnd_len ? first_len : secnd_len;
+	for (ssize_t i = 0; i < min_len; ++i) {
+		if (first[i] != second[i]) return i;
+	}
+	return 0;
+}
+
+
 static void
 new_filename_completer(rpl_env_t *env, const char *input, ssize_t pos)
 {
@@ -499,16 +512,28 @@ new_filename_completer(rpl_env_t *env, const char *input, ssize_t pos)
 	dir_cursor d = 0;
 	dir_entry entry;
 	bool cont = true;
+	bool first = true;
+	char pref_intersec[128];
 	if (os_findfirst(env->mem, dirname_str, &d, &entry)) {
 		do {
 			const char *fname = os_direntry_name(&entry);
 			// printf("dir entry: \"%s\"\n", fname);
 			if (fname != NULL &&
 			    strcmp(fname, ".") != 0 &&
-			    // strcmp(fname, "..") != 0 &&
+			    strcmp(fname, "..") != 0 &&
 			    strlen(fname) >= fname_prefix.stop - fname_prefix.start &&
 			    strncmp(fname, fname_prefix.start, fname_prefix.stop - fname_prefix.start) == 0)
 			{
+				/// Update common prefix
+				if (first) {
+					first = false;
+					strcpy(pref_intersec, fname);
+				} else {
+					ssize_t diffchar = get_first_diffchar(pref_intersec, fname);
+					if (diffchar > 0) {
+						memset(pref_intersec + diffchar, 0, 128 - diffchar);
+					}
+				}
 				const char *help = "";
                 int delete_before = env->completions->cut_start;
                 int delete_after = env->completions->cut_stop;
@@ -531,6 +556,10 @@ new_filename_completer(rpl_env_t *env, const char *input, ssize_t pos)
 			}
 		} while (cont && os_findnext(d, &entry));
 		os_findclose(d);
+	}
+	if (pref_intersec[0] > 0) {
+		// printf("COMMON PREFIX: %s\n", pref_intersec);
+		/// TODO append common prefix to edit buffer and modify env->completions->cut_start
 	}
 }
 
