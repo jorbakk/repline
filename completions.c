@@ -489,6 +489,7 @@ new_filename_completer(rpl_env_t *env, const char *input, ssize_t pos)
 	char dirname_str[128] = {0};
 	if (dirname.start == dirname.stop) {
 		dirname_str[0] = '.';
+		dirname_str[1] = rpl_dirsep();
 	} else {
 		snprintf(dirname_str, dirname.stop - dirname.start + 1, "%s", dirname.start);
 	}
