@@ -28,6 +28,8 @@ struct completions_s {
 	ssize_t len;
 	completion_t *elems;
 	alloc_t *mem;
+	ssize_t cut_start;
+	ssize_t cut_stop;
 };
 
 static void default_filename_completer(rpl_completion_env_t * cenv,
@@ -71,6 +73,7 @@ completions_clear(completions_t * cms)
 		cms->count--;
 	}
 }
+
 
 static void
 completions_push(completions_t * cms, const char *replacement,
@@ -217,6 +220,30 @@ rpl_stop_completing(const rpl_completion_env_t * cenv)
 	return (cenv == NULL ? true : cenv->env->completions->completer_max <= 0);
 }
 
+#ifdef NEW_COMPLETIONS
+static ssize_t
+new_completion_apply(completion_t *cm, stringbuf_t *sbuf, ssize_t pos)
+{
+	if (cm == NULL)
+		return -1;
+	debug_msg("completion: apply: %s at %zd\n", cm->replacement, pos);
+	// ssize_t start = pos - cm->delete_before;
+	ssize_t start = cm->delete_before;
+	if (start < 0)
+		start = 0;
+	ssize_t n = cm->delete_before + cm->delete_after;
+	if (rpl_strlen(cm->replacement) == n
+	    && strncmp(sbuf_string_at(sbuf, start), cm->replacement,
+	               to_size_t(n)) == 0) {
+		// no changes
+		return -1;
+	} else {
+		// sbuf_delete_from_to(sbuf, start, pos + cm->delete_after);
+		sbuf_delete_from_to(sbuf, start, cm->delete_after);
+		return sbuf_insert_at(sbuf, cm->replacement, start);
+	}
+}
+#else
 static ssize_t
 completion_apply(completion_t * cm, stringbuf_t * sbuf, ssize_t pos)
 {
@@ -237,15 +264,23 @@ completion_apply(completion_t * cm, stringbuf_t * sbuf, ssize_t pos)
 		return sbuf_insert_at(sbuf, cm->replacement, start);
 	}
 }
+#endif
+
 
 rpl_private ssize_t
 completions_apply(completions_t * cms, ssize_t index, stringbuf_t * sbuf,
                   ssize_t pos)
 {
 	completion_t *cm = completions_get(cms, index);
+#ifdef NEW_COMPLETIONS
+	return new_completion_apply(cm, sbuf, pos);
+#else
 	return completion_apply(cm, sbuf, pos);
+#endif
 }
 
+
+/// ------------------ no changes from here ...
 static int
 completion_compare(const void *p1, const void *p2)
 {
@@ -314,7 +349,11 @@ completions_apply_longest_prefix(completions_t * cms, stringbuf_t * sbuf,
 	memset(&cprefix, 0, sizeof(cprefix));
 	cprefix.delete_before = delete_before;
 	cprefix.replacement = prefix;
+#ifdef NEW_COMPLETIONS
+	ssize_t newpos = new_completion_apply(&cprefix, sbuf, pos);
+#else
 	ssize_t newpos = completion_apply(&cprefix, sbuf, pos);
+#endif
 	if (newpos < 0)
 		return newpos;
 
@@ -386,6 +425,120 @@ rpl_set_default_completer(rpl_completer_fun_t * completer, void *arg)
 	completions_set_completer(env->completions, completer, arg);
 }
 
+#ifdef NEW_COMPLETIONS
+typedef struct stringview_s {
+	char *start, *stop;
+} stringview_t;
+
+
+/// Returns a string view that covers the word where the cursor (pos) is in.
+/// Paramters
+///   input: null-terminated string that will be parsed
+///   pos: cursor position
+///   delim: function that defines the word boundary characters
+stringview_t
+get_word(const char *input, ssize_t pos, rpl_is_char_class_fun_t *delim)
+{
+	size_t len = strlen(input);
+	ssize_t word_start = str_find_backward(input, len, pos, delim, false);
+	word_start = word_start < 0 ? 0 : word_start;
+	ssize_t word_stop  = str_find_forward(input, len, pos, delim, false);
+	word_stop = word_stop < 0 ? len : word_stop;
+	stringview_t ret = { .start = (char *)input + word_start, .stop = (char *)input + word_stop };
+	return ret;
+}
+
+
+/// Returns a string view that covers the word where the cursor (pos) is in.
+/// Paramters
+///   input: string view that will be parsed
+///   pos: cursor position
+///   delim: function that defines the word boundary characters
+stringview_t
+get_word_from_view(stringview_t input, ssize_t pos, rpl_is_char_class_fun_t *delim)
+{
+	ssize_t word_start = str_find_backward(input.start, input.stop - input.start, pos, delim, false);
+	word_start = word_start < 0 ? 0 : word_start;
+	ssize_t word_stop  = str_find_forward(input.start, input.stop - input.start, pos, delim, false);
+	word_stop = word_stop < 0 ? input.stop - input.start : word_stop;
+	stringview_t ret = { .start = input.start + word_start, .stop = input.start + word_stop };
+	return ret;
+}
+
+
+static void
+new_filename_completer(rpl_env_t *env, const char *input, ssize_t pos)
+{
+	if (input == NULL)
+		return;
+
+	/// New way to find the boundaries for cutting out and replacing the word to be
+	/// completed.
+	stringview_t word = get_word(input, pos, rpl_char_is_white);
+	stringview_t fname_prefix = get_word_from_view(word, word.stop - word.start,
+	                                          rpl_char_is_dir_separator);
+	stringview_t dirname = { .start = word.start, .stop = fname_prefix.start };
+	env->completions->cut_start = fname_prefix.start - input;
+	env->completions->cut_stop = fname_prefix.stop - input;
+
+	/// Print the boundaries for debugging purposes
+	char word_str[128];
+	snprintf(word_str, word.stop - word.start + 1, "%s", word.start);
+	char fname_prefix_str[128];
+	snprintf(fname_prefix_str, fname_prefix.stop - fname_prefix.start + 1, "%s", fname_prefix.start);
+	char dirname_str[128] = {0};
+	if (dirname.start == dirname.stop) {
+		dirname_str[0] = '.';
+	} else {
+		snprintf(dirname_str, dirname.stop - dirname.start + 1, "%s", dirname.start);
+	}
+	// printf("rest input: \"%s\", word: \"%s\", dirname: \"%s\", fname_prefix: \"%s\"\n",
+	      // input + pos, word_str, dirname_str, fname_prefix_str);
+
+	dir_cursor d = 0;
+	dir_entry entry;
+	bool cont = true;
+	if (os_findfirst(env->mem, dirname_str, &d, &entry)) {
+		do {
+			const char *fname = os_direntry_name(&entry);
+			// printf("dir entry: \"%s\"\n", fname);
+			if (fname != NULL &&
+			    strcmp(fname, ".") != 0 &&
+			    strcmp(fname, "..") != 0 &&
+			    strlen(fname) >= fname_prefix.stop - fname_prefix.start &&
+			    strncmp(fname, fname_prefix.start, fname_prefix.stop - fname_prefix.start) == 0)
+			{
+				// printf("MATCH: \"%s\"\n", fname);
+				const char *help = "__help__";           /// Fake entry
+                int delete_before = env->completions->cut_start;
+                int delete_after = env->completions->cut_stop;
+                /// Append '/' if fname is a directory
+				stringbuf_t *fname_str = sbuf_new(env->mem);
+				sbuf_append(fname_str, fname);
+				if (os_is_dir(fname)) {
+					sbuf_append_char(fname_str, rpl_dirsep());
+				}
+				cont = completions_add(env->completions,
+				                      sbuf_string(fname_str), sbuf_string(fname_str),
+				                      help, delete_before, delete_after);
+				sbuf_free(fname_str);
+			}
+		} while (cont && os_findnext(d, &entry));
+		os_findclose(d);
+	}
+}
+
+
+void
+new_completions_generate(struct rpl_env_s *env, const char *input, ssize_t pos, ssize_t max)
+{
+	completions_clear(env->completions);
+	env->completions->completer_max = max;
+	new_filename_completer(env, input, pos);
+}
+
+#else
+
 rpl_private ssize_t
 completions_generate(struct rpl_env_s *env, completions_t *cms,
                      const char *input, ssize_t pos, ssize_t max)
@@ -412,6 +565,8 @@ completions_generate(struct rpl_env_s *env, completions_t *cms,
 	mem_free(cms->mem, prefix);
 	return completions_count(cms);
 }
+#endif
+
 
 extern char **environ;
 

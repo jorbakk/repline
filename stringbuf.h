@@ -126,5 +126,9 @@ rpl_private ssize_t str_next_ofs(const char *s, ssize_t len, ssize_t pos,
                                  ssize_t * cwidth);
 rpl_private ssize_t str_skip_until_fit(const char *s, ssize_t max_width);   // tail that fits
 rpl_private ssize_t str_take_while_fit(const char *s, ssize_t max_width);   // prefix that fits
+rpl_private ssize_t str_find_backward(const char *s, ssize_t len, ssize_t pos,
+                  rpl_is_char_class_fun_t * match, bool skip_immediate_matches);
+rpl_private ssize_t str_find_forward(const char *s, ssize_t len, ssize_t pos,
+                  rpl_is_char_class_fun_t * match, bool skip_immediate_matches);
 
 #endif                          // RPL_STRINGBUF_H

@@ -250,7 +250,7 @@ str_limit_to_length(const char *s, ssize_t n)
 // String searching prev/next word, line, ws_word
 //-------------------------------------------------------------
 
-static ssize_t
+rpl_private ssize_t
 str_find_backward(const char *s, ssize_t len, ssize_t pos,
                   rpl_is_char_class_fun_t * match, bool skip_immediate_matches)
 {
@@ -285,7 +285,7 @@ str_find_backward(const char *s, ssize_t len, ssize_t pos,
 	return -1;                  // not found
 }
 
-static ssize_t
+rpl_private ssize_t
 str_find_forward(const char *s, ssize_t len, ssize_t pos,
                  rpl_is_char_class_fun_t * match, bool skip_immediate_matches)
 {
@@ -1204,6 +1204,19 @@ rpl_char_is_separator(const char *s, long len)
 		return false;
 	const char c = *s;
 	return (strchr(" \t\r\n,.;:/\\(){}[]", c) != NULL);
+}
+
+rpl_public bool
+rpl_char_is_dir_separator(const char *s, long len)
+{
+	if (s == NULL || len != 1)
+		return false;
+	const char c = *s;
+#ifdef _WIN32
+	return (strchr("/\\", c) != NULL);
+#else
+	return c == '/';
+#endif
 }
 
 // Convenience: character class for non-separators.

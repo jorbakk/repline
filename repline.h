@@ -485,6 +485,11 @@ Contents:
 /// This is used for word boundaries in repline.
 	bool rpl_char_is_separator(const char *s, long len);
 
+/// Convenience: character class for directory separators.
+/// (``/\\``.)
+/// This is used for file boundaries in repline.
+	bool rpl_char_is_dir_separator(const char *s, long len);
+
 /// Convenience: character class for non-separators.
 	bool rpl_char_is_nonseparator(const char *s, long len);
 

@@ -664,6 +664,15 @@ filename_complete_indir(rpl_completion_env_t *cenv, stringbuf_t *dir,
 	dir_cursor d = 0;
 	dir_entry entry;
 	bool cont = true;
+
+	// stringbuf_t *dir_expanded = sbuf_new(cenv->env->mem);
+	// sbuf_append(dir_expanded, sbuf_string(dir));
+	// debug_msg("\norig: %s\n", sbuf_string(dir_expanded));
+	// sbuf_expand_envars(dir_expanded);
+	// debug_msg("expanded: %s\n", sbuf_string(dir_expanded));
+	// // char *ret = sbuf_free_dup(dir_expanded);
+
+	// if (os_findfirst(cenv->env->mem, sbuf_string(dir_expanded), &d, &entry)) {
 	if (os_findfirst(cenv->env->mem, sbuf_string(dir), &d, &entry)) {
 		do {
 			const char *name = os_direntry_name(&entry);
@@ -753,7 +762,8 @@ filename_completer(rpl_completion_env_t *cenv, const char *prefix)
 		}
 		filename_complete_indir(cenv, root_dir, dir_prefix, display,
 		                        (base != NULL ? base : prefix),
-		                        fclosure->dir_sep, fclosure->extensions);
+		                        fclosure->dir_sep,
+		                        fclosure->extensions);
 	} else {
 		// relative path, complete with respect to every root.
 		const char *next;
@@ -803,8 +813,10 @@ rpl_complete_filename(rpl_completion_env_t * cenv, const char *prefix,
 	fclosure.extensions = extensions;
 	cenv->arg = &fclosure;
 	rpl_complete_qword_ex(cenv, prefix, &filename_completer,
-	                      &rpl_char_is_filename_letter, 0, "'\"");
+	                      &rpl_char_is_idletter, 0, "'\"");
 	                      // &rpl_char_is_filename_letter, '\\', "'\"");
+	// rpl_complete_word(cenv, prefix, &filename_completer,
+	                      // &rpl_char_is_filename_letter);
 }
 
 rpl_public char *

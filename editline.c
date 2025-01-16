@@ -1257,7 +1257,11 @@ edit_line(rpl_env_t * env, const char *prompt_text)
 				// completion, history, help, undo
 			case KEY_TAB:
 			case WITH_ALT('?'):
+#ifdef NEW_COMPLETIONS
+				new_edit_generate_completions(env, &eb);
+#else
 				edit_generate_completions(env, &eb);
+#endif
 				break;
 			case WITH_ALT('.'):
 				edit_history_prev_word(env, &eb);
