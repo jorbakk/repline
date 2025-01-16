@@ -509,7 +509,8 @@ new_filename_completer(rpl_env_t *env, const char *input, ssize_t pos)
 			    strncmp(fname, fname_prefix.start, fname_prefix.stop - fname_prefix.start) == 0)
 			{
 				// printf("MATCH: \"%s\"\n", fname);
-				const char *help = "__help__";           /// Fake entry
+				// const char *help = "__help__";           /// Fake entry
+				const char *help = "";                      /// Empty help
                 int delete_before = env->completions->cut_start;
                 int delete_after = env->completions->cut_stop;
                 /// Append '/' if fname is a directory
