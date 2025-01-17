@@ -287,6 +287,7 @@ edit_generate_completions(rpl_env_t *env, editor_t *eb)
 		// complete if only one match
 		edit_complete(env, eb, 0);
 	} else {
+		sbuf_clear(eb->hint);
 		completions_sort(env->completions);
 		edit_completion_menu(env, eb, more_available);
 	}
