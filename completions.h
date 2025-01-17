@@ -14,21 +14,15 @@
 typedef struct completions_s completions_t;
 typedef struct editor_s editor_t;
 
-rpl_private completions_t *new_completions(alloc_t * mem);
+rpl_private completions_t *completions(alloc_t * mem);
 rpl_private void completions_free(completions_t * cms);
 rpl_private void completions_clear(completions_t * cms);
 rpl_private bool completions_add(completions_t * cms, const char *replacement,
                                  const char *display, const char *help);
 rpl_private ssize_t completions_count(completions_t * cms);
-#ifdef NEW_COMPLETIONS
-rpl_private void new_completions_generate(struct rpl_env_s *env,
+rpl_private void completions_generate(struct rpl_env_s *env,
                                          editor_t *eb,
                                          ssize_t max);
-#else
-rpl_private ssize_t completions_generate(struct rpl_env_s *env,
-                                         completions_t * cms, const char *input,
-                                         ssize_t pos, ssize_t max);
-#endif
 rpl_private void completions_sort(completions_t * cms);
 rpl_private void completions_set_completer(completions_t * cms,
                                            rpl_completer_fun_t * completer,
@@ -44,9 +38,6 @@ rpl_private void completions_get_completer(completions_t * cms,
 
 rpl_private ssize_t completions_apply(completions_t * cms, ssize_t index,
                                       stringbuf_t * sbuf, ssize_t pos);
-rpl_private ssize_t completions_apply_longest_prefix(completions_t * cms,
-                                                     stringbuf_t * sbuf,
-                                                     ssize_t pos);
 
 //-------------------------------------------------------------
 // Completion environment

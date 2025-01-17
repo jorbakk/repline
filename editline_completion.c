@@ -18,24 +18,6 @@ edit_complete(rpl_env_t * env, editor_t * eb, ssize_t idx)
 	return true;
 }
 
-#ifdef NEW_COMPLETIONS
-#else
-static bool
-edit_complete_longest_prefix(rpl_env_t * env, editor_t * eb)
-{
-	editor_start_modify(eb);
-	ssize_t newpos =
-	    completions_apply_longest_prefix(env->completions, eb->input, eb->pos);
-	if (newpos < 0) {
-		editor_undo_restore(eb, false);
-		return false;
-	}
-	eb->pos = newpos;
-	sbuf_clear(eb->hint);
-	edit_refresh(env, eb);
-	return true;
-}
-#endif
 
 rpl_private void
 sbuf_append_tagged(stringbuf_t * sb, const char *tag, const char *content)
@@ -254,15 +236,9 @@ edit_completion_menu(rpl_env_t * env, editor_t * eb, bool more_available)
 		c = 0;
 		if (more_available) {
 			// generate all entries (up to the max (= 1000))
-#ifdef NEW_COMPLETIONS
-		    new_completions_generate(env, eb,
+		    completions_generate(env, eb,
 		                         RPL_MAX_COMPLETIONS_TO_SHOW);
 			count = completions_count(env->completions);
-#else
-			count = completions_generate(env, env->completions,
-			                         sbuf_string(eb->input), eb->pos,
-			                         RPL_MAX_COMPLETIONS_TO_SHOW);
-#endif
 		}
 		rowcol_t rc;
 		edit_get_rowcol(env, eb, &rc);
@@ -297,12 +273,11 @@ edit_completion_menu(rpl_env_t * env, editor_t * eb, bool more_available)
 }
 
 
-#ifdef NEW_COMPLETIONS
 static void
-new_edit_generate_completions(rpl_env_t *env, editor_t *eb)
+edit_generate_completions(rpl_env_t *env, editor_t *eb)
 {
 	// printf("edit buffer before: '%s', pos: %ld\n", sbuf_string(eb->input), eb->pos);
-	new_completions_generate(env, eb, RPL_MAX_COMPLETIONS_TO_TRY);
+	completions_generate(env, eb, RPL_MAX_COMPLETIONS_TO_TRY);
 	// print_completions(env);
 	bool more_available = (completions_count(env->completions) >= RPL_MAX_COMPLETIONS_TO_TRY);
 	if (completions_count(env->completions) <= 0) {
@@ -317,31 +292,3 @@ new_edit_generate_completions(rpl_env_t *env, editor_t *eb)
 	}
 	// printf("edit buffer after: \"%s\", pos: %ld\n\n", sbuf_string(eb->input), eb->pos);
 }
-
-#else
-
-static void
-edit_generate_completions(rpl_env_t *env, editor_t *eb)
-{
-	debug_msg("edit: complete: %zd: %s\n", eb->pos, sbuf_string(eb->input));
-	if (eb->pos < 0)
-		return;
-	ssize_t count = completions_generate(env, env->completions, sbuf_string(eb->input),
-	                         eb->pos, RPL_MAX_COMPLETIONS_TO_TRY);
-	bool more_available = (count >= RPL_MAX_COMPLETIONS_TO_TRY);
-	if (count <= 0) {
-		// no completions
-		term_beep(env->term);
-	} else if (count == 1) {
-		// complete if only one match    
-		edit_complete(env, eb, 0 /* idx of selected completion */ );
-	} else {
-		//term_beep(env->term); 
-		if (!more_available) {
-			edit_complete_longest_prefix(env, eb);
-		}
-		completions_sort(env->completions);
-		edit_completion_menu(env, eb, more_available);
-	}
-}
-#endif

@@ -218,7 +218,7 @@ Contents:
 /// Expand environment variables.
 /// All environment variables starting with '$' and ending at a word boundary are expanded
 /// using the environment of the process.
-	char *rpl_expand_envar(rpl_completion_env_t * cenv, const char *prefix);
+	// char *rpl_expand_envar(rpl_completion_env_t * cenv, const char *prefix);
 
 /// Complete environment variables.
 /// All environment variables starting with '$' and ending at a word boundary are expanded

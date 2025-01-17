@@ -6,10 +6,6 @@ ifeq ($(DEBUG), 1)
 	CFLAGS += -g
 endif
 
-ifeq ($(NEW_COMPLETIONS), 1)
-	CFLAGS += -DNEW_COMPLETIONS
-endif
-
 SRCS = attr.c bbcode.c bbcode_colors.c common.c completers.c completions.c editline.c editline_completion.c editline_help.c editline_history.c example.c highlight.c history.c history_sqlite.c repline.c stringbuf.c term.c term_color.c test_colors.c tty.c tty_esc.c undo.c wcwidth.c
 HDRS = attr.h bbcode.h common.h completions.h env.h highlight.h history.h repline.h stringbuf.h term.h tty.h undo.h
 

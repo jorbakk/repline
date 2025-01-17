@@ -129,13 +129,13 @@ word_completer(rpl_completion_env_t * cenv, const char *word)
 static void
 completer(rpl_completion_env_t *cenv, const char *input)
 {
-	char *expanded = rpl_expand_envar(cenv, input);
+	// char *expanded = rpl_expand_envar(cenv, input);
 
 	// try to complete file names from the roots "." and "/usr/local"
-	rpl_complete_filename(cenv, expanded, 0, ".;/usr/local;c:\\Program Files",
+	// rpl_complete_filename(cenv, expanded, 0, ".;/usr/local;c:\\Program Files",
 	// rpl_complete_filename(cenv, input, 0, ".;/usr/local;c:\\Program Files",
-	                      NULL /* any extension */ );
-	rpl_free(expanded);
+	                      // NULL /* any extension */ );
+	// rpl_free(expanded);
 
 	// and also use our custom completer  
 	// rpl_complete_word(cenv, input, &word_completer,
