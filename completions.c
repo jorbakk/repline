@@ -19,7 +19,7 @@ typedef struct completion_s {
 } completion_t;
 
 struct completions_s {
-	rpl_completer_fun_t *completer;
+	// rpl_completer_fun_t *completer;
 	void *completer_arg;
 	ssize_t completer_max;
 	ssize_t count;
@@ -39,7 +39,6 @@ completions_new(alloc_t * mem)
 		return NULL;
 	cms->mem = mem;
 	// cms->completer = &default_filename_completer;
-	cms->completer = NULL;
 	return cms;
 }
 
@@ -184,21 +183,21 @@ completions_get_hint(completions_t * cms, ssize_t index, const char **help)
 	return hint;
 }
 
-rpl_private void
-completions_set_completer(completions_t * cms, rpl_completer_fun_t * completer,
-                          void *arg)
-{
-	cms->completer = completer;
-	cms->completer_arg = arg;
-}
+// rpl_private void
+// completions_set_completer(completions_t * cms, rpl_completer_fun_t * completer,
+                          // void *arg)
+// {
+	// cms->completer = completer;
+	// cms->completer_arg = arg;
+// }
 
-rpl_private void
-completions_get_completer(completions_t * cms, rpl_completer_fun_t ** completer,
-                          void **arg)
-{
-	*completer = cms->completer;
-	*arg = cms->completer_arg;
-}
+// rpl_private void
+// completions_get_completer(completions_t * cms, rpl_completer_fun_t ** completer,
+                          // void **arg)
+// {
+	// *completer = cms->completer;
+	// *arg = cms->completer_arg;
+// }
 
 rpl_public void *
 rpl_completion_arg(const rpl_completion_env_t * cenv)
@@ -311,14 +310,14 @@ prim_add_completion(rpl_env_t * env, void *funenv, const char *replacement,
 	return completions_add(env->completions, replacement, display, help);
 }
 
-rpl_public void
-rpl_set_default_completer(rpl_completer_fun_t * completer, void *arg)
-{
-	rpl_env_t *env = rpl_get_env();
-	if (env == NULL)
-		return;
-	completions_set_completer(env->completions, completer, arg);
-}
+// rpl_public void
+// rpl_set_default_completer(rpl_completer_fun_t * completer, void *arg)
+// {
+	// rpl_env_t *env = rpl_get_env();
+	// if (env == NULL)
+		// return;
+	// completions_set_completer(env->completions, completer, arg);
+// }
 
 typedef struct stringview_s {
 	char *start, *stop;

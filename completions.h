@@ -24,17 +24,17 @@ rpl_private void completions_generate(struct rpl_env_s *env,
                                          editor_t *eb,
                                          ssize_t max);
 rpl_private void completions_sort(completions_t * cms);
-rpl_private void completions_set_completer(completions_t * cms,
-                                           rpl_completer_fun_t * completer,
-                                           void *arg);
+// rpl_private void completions_set_completer(completions_t * cms,
+                                           // rpl_completer_fun_t * completer,
+                                           // void *arg);
 rpl_private const char *completions_get_display(completions_t * cms,
                                                 ssize_t index,
                                                 const char **help);
 rpl_private const char *completions_get_hint(completions_t * cms, ssize_t index,
                                              const char **help);
-rpl_private void completions_get_completer(completions_t * cms,
-                                           rpl_completer_fun_t ** completer,
-                                           void **arg);
+// rpl_private void completions_get_completer(completions_t * cms,
+                                           // rpl_completer_fun_t ** completer,
+                                           // void **arg);
 
 rpl_private ssize_t completions_apply(completions_t * cms, ssize_t index,
                                       stringbuf_t * sbuf, ssize_t pos);

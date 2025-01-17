@@ -156,15 +156,15 @@ Contents:
 /// and the user given argument when the callback was set.
 /// When using completion transformers, like `rpl_complete_quoted_word`
 /// the `prefix` contains the word to be completed without escape characters or quotes.
-	typedef void (rpl_completer_fun_t) (rpl_completion_env_t * cenv,
-	                                    const char *prefix);
+	// typedef void (rpl_completer_fun_t) (rpl_completion_env_t * cenv,
+	                                    // const char *prefix);
 
 /// Set the default completion handler.
 /// @param completer  The completion function
 /// @param arg        Argument passed to the \a completer.
 /// There can only be one default completion function, setting it again disables the previous one.
 /// The initial default completer uses `rpl_complete_filename`.
-	void rpl_set_default_completer(rpl_completer_fun_t * completer, void *arg);
+	// void rpl_set_default_completer(rpl_completer_fun_t * completer, void *arg);
 
 /// Use this function to add a completion in a completion callback, which in turn
 /// usually is set by rpl_complete_word().
@@ -238,9 +238,9 @@ Contents:
 /// For example, on the input "hello w", the user `fun` only gets `w` and can just complete
 /// with "world" resulting in "hello world" without needing to consider `delete_before` etc.
 /// @see rpl_complete_qword() for completing quoted and escaped tokens.
-	void rpl_complete_word(rpl_completion_env_t * cenv, const char *prefix,
-	                       rpl_completer_fun_t * fun,
-	                       rpl_is_char_class_fun_t * is_word_char);
+	// void rpl_complete_word(rpl_completion_env_t * cenv, const char *prefix,
+	                       // rpl_completer_fun_t * fun,
+	                       // rpl_is_char_class_fun_t * is_word_char);
 
 /// Complete a quoted _word_. 
 /// Calls the user provided function `fun` to complete while taking
@@ -259,9 +259,9 @@ Contents:
 /// with proper quotes and escapes.
 /// If `is_word_char` is NULL, the default `&rpl_char_is_nonseparator` is used. 
 /// @see rpl_complete_quoted_word() to customize the word boundary, quotes etc.
-	void rpl_complete_qword(rpl_completion_env_t * cenv, const char *prefix,
-	                        rpl_completer_fun_t * fun,
-	                        rpl_is_char_class_fun_t * is_word_char);
+	// void rpl_complete_qword(rpl_completion_env_t * cenv, const char *prefix,
+	                        // rpl_completer_fun_t * fun,
+	                        // rpl_is_char_class_fun_t * is_word_char);
 
 /// Complete a _word_. 
 /// Calls the user provided function `fun` to complete while taking
@@ -270,10 +270,10 @@ Contents:
 /// The `escape_char` is the escaping character, usually `\` but use 0 to not have escape characters.
 /// The `quote_chars` define the quotes, use NULL for the default `"\'\""` quotes.
 /// @see rpl_complete_word() which uses the default values for `non_word_chars`, `quote_chars` and `\` for escape characters.
-	void rpl_complete_qword_ex(rpl_completion_env_t * cenv, const char *prefix,
-	                           rpl_completer_fun_t fun,
-	                           rpl_is_char_class_fun_t * is_word_char,
-	                           char escape_char, const char *quote_chars);
+	// void rpl_complete_qword_ex(rpl_completion_env_t * cenv, const char *prefix,
+	                           // rpl_completer_fun_t fun,
+	                           // rpl_is_char_class_fun_t * is_word_char,
+	                           // char escape_char, const char *quote_chars);
 
 /// \}
 
@@ -323,10 +323,10 @@ Contents:
 /// using a particular completion function and highlighter for this call only.
 /// both can be NULL in which case the defaults are used.
 /// @see rpl_readline(), rpl_set_prompt_marker(), rpl_set_default_completer(), rpl_set_default_highlighter().
-	char *rpl_readline_ex(const char *prompt_text,
-	                      rpl_completer_fun_t * completer, void *completer_arg,
-	                      rpl_highlight_fun_t * highlighter,
-	                      void *highlighter_arg);
+	// char *rpl_readline_ex(const char *prompt_text,
+	                      // rpl_completer_fun_t * completer, void *completer_arg,
+	                      // rpl_highlight_fun_t * highlighter,
+	                      // void *highlighter_arg);
 
 /// \}
 

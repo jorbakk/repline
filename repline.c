@@ -688,6 +688,7 @@ rpl_term_color_rgb(bool foreground, uint32_t hcolor)
 // Readline with temporary completer and highlighter
 //-------------------------------------------------------------
 
+#if 0
 rpl_public char *
 rpl_readline_ex(const char *prompt_text,
                 rpl_completer_fun_t * completer, void *completer_arg,
@@ -716,6 +717,7 @@ rpl_readline_ex(const char *prompt_text,
 	rpl_set_default_highlighter(prev_highlighter, prev_highlighter_arg);
 	return res;
 }
+#endif
 
 //-------------------------------------------------------------
 // Initialize
