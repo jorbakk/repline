@@ -601,7 +601,7 @@ edit_refresh_hint(rpl_env_t * env, editor_t * eb)
 }
 
 static void
-edit_refresh_history_hint(rpl_env_t * env, editor_t * eb)
+edit_refresh_history_hint(rpl_env_t *env, editor_t *eb)
 {
 	if (eb->modified) {
 		eb->history_idx = 0;
@@ -609,7 +609,7 @@ edit_refresh_history_hint(rpl_env_t * env, editor_t * eb)
 		eb->history_wpos = 0;
 		// eb->modified = false;
 	}
-	/// Though it shouldn't when only moving he cursor in a modified buffer, eb->pos == 0 also works ...
+	/// Though it shouldn't when only moving the cursor in a modified buffer, eb->pos == 0 also works ...
 	// if (eb->modified && eb->pos == 0) {
 	if (eb->modified && sbuf_len(eb->input) == 0) {
 		sbuf_clear(eb->hint);
@@ -617,8 +617,7 @@ edit_refresh_history_hint(rpl_env_t * env, editor_t * eb)
 		edit_refresh(env, eb);
 		return;
 	}
-	const char *entry =
-	    history_get_with_prefix(env->history, 1, sbuf_string(eb->input));
+	const char *entry = history_get_with_prefix(env->history, 1, sbuf_string(eb->input));
 	if (entry) {
 		debug_msg("input found in history: %s, edit_buf: %s\n", entry,
 		          sbuf_string(eb->input));

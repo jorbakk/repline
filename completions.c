@@ -483,7 +483,6 @@ new_filename_completer(rpl_env_t *env, editor_t *eb)
 	env->completions->cut_start = fname_prefix.start - input;
 	env->completions->cut_stop = fname_prefix.stop - input;
 
-	/// Print the boundaries for debugging purposes
 	char word_str[128];
 	snprintf(word_str, word.stop - word.start + 1, "%s", word.start);
 	char fname_prefix_str[128];
@@ -502,7 +501,7 @@ new_filename_completer(rpl_env_t *env, editor_t *eb)
 	dir_entry entry;
 	bool cont = true;
 	bool first = true;
-	char pref_intersec[128];
+	char pref_intersec[128] = {0};
 	if (os_findfirst(env->mem, dirname_str, &d, &entry)) {
 		do {
 			const char *fname = os_direntry_name(&entry);
@@ -524,8 +523,6 @@ new_filename_completer(rpl_env_t *env, editor_t *eb)
 					}
 				}
 				const char *help = "";
-                // int delete_before = env->completions->cut_start;
-                // int delete_after = env->completions->cut_stop;
                 /// Append '/' if fname is a directory
 				stringbuf_t *fname_str = sbuf_new(env->mem);
 				sbuf_append(fname_str, fname);
@@ -547,6 +544,7 @@ new_filename_completer(rpl_env_t *env, editor_t *eb)
 		os_findclose(d);
 	}
 	ssize_t pref_intersec_len = strlen(pref_intersec);
+	/// TODO replace strlen(fname_prefix_str) with length of stringview (fname_prefix.stop - ...)
 	if (pref_intersec_len > 0) {
 		sbuf_append(eb->input, pref_intersec + strlen(fname_prefix_str));
 		eb->pos += pref_intersec_len - strlen(fname_prefix_str);
