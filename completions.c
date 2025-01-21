@@ -365,10 +365,11 @@ get_first_diffchar(const char *first, const char *second)
 	ssize_t first_len = strlen(first);
 	ssize_t secnd_len = strlen(second);
 	ssize_t min_len = first_len < secnd_len ? first_len : secnd_len;
-	for (ssize_t i = 0; i < min_len; ++i) {
-		if (first[i] != second[i]) return i;
+	ssize_t i;
+	for (i = 0; i < min_len; ++i) {
+		if (first[i] != second[i]) break;
 	}
-	return 0;
+	return i;
 }
 
 
@@ -409,6 +410,7 @@ filename_completer(rpl_env_t *env, editor_t *eb)
 	bool cont = true;
 	bool first = true;
 	char pref_intersec[RPL_MAX_PREFIX] = {0};
+	ssize_t diffchar = RPL_MAX_PREFIX;
 	if (os_findfirst(env->mem, dirname_str, &d, &entry)) {
 		do {
 			const char *fname = os_direntry_name(&entry);
@@ -424,13 +426,13 @@ filename_completer(rpl_env_t *env, editor_t *eb)
 					first = false;
 					strcpy(pref_intersec, fname);
 				} else {
-					ssize_t diffchar = get_first_diffchar(pref_intersec, fname);
 					if (diffchar > 0) {
-						memset(pref_intersec + diffchar, 0, RPL_MAX_PREFIX - diffchar);
+						diffchar = get_first_diffchar(pref_intersec, fname);
+						// memset(pref_intersec + diffchar, 0, RPL_MAX_PREFIX - diffchar);
+						*(pref_intersec + diffchar) = 0;
 					}
 				}
 				const char *help = "";
-                /// Append '/' if fname is a directory
 				stringbuf_t *fname_str = sbuf_new(env->mem);
 				sbuf_append(fname_str, fname);
 				char full_path[2 * RPL_MAX_PREFIX];
