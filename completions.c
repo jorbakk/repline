@@ -455,7 +455,7 @@ filename_completer(rpl_env_t *env, editor_t *eb)
 	ssize_t pref_intersec_len = strlen(pref_intersec);
 	/// TODO replace strlen(fname_prefix_str) with length of stringview (fname_prefix.stop - ...)
 	if (pref_intersec_len > 0) {
-		sbuf_append(eb->input, pref_intersec + strlen(fname_prefix_str));
+		sbuf_insert_at(eb->input, pref_intersec + strlen(fname_prefix_str), eb->pos);
 		eb->pos += pref_intersec_len - strlen(fname_prefix_str);
 		env->completions->cut_stop -= strlen(fname_prefix_str) - pref_intersec_len;
 	}
