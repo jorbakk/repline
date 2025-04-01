@@ -387,6 +387,7 @@ filename_completer(rpl_env_t *env, editor_t *eb)
 	stringview_t word = get_word(input, pos, rpl_char_is_white);
 	stringview_t fname_prefix = get_word_from_view(word, word.stop - word.start,
 	                                          rpl_char_is_dir_separator);
+	ssize_t fname_prefix_len = fname_prefix.stop - fname_prefix.start;
 	stringview_t dirname = { .start = word.start, .stop = fname_prefix.start };
 	env->completions->cut_start = fname_prefix.start - input;
 	env->completions->cut_stop = fname_prefix.stop - input;
@@ -394,7 +395,7 @@ filename_completer(rpl_env_t *env, editor_t *eb)
 	char word_str[RPL_MAX_PREFIX];
 	snprintf(word_str, word.stop - word.start + 1, "%s", word.start);
 	char fname_prefix_str[RPL_MAX_PREFIX];
-	snprintf(fname_prefix_str, fname_prefix.stop - fname_prefix.start + 1, "%s", fname_prefix.start);
+	snprintf(fname_prefix_str, fname_prefix_len + 1, "%s", fname_prefix.start);
 	char dirname_str[RPL_MAX_PREFIX] = {0};
 	if (dirname.start == dirname.stop) {
 		dirname_str[0] = '.';
@@ -418,8 +419,8 @@ filename_completer(rpl_env_t *env, editor_t *eb)
 			if (fname != NULL &&
 			    strcmp(fname, ".") != 0 &&
 			    strcmp(fname, "..") != 0 &&
-			    strlen(fname) >= fname_prefix.stop - fname_prefix.start &&
-			    strncmp(fname, fname_prefix.start, fname_prefix.stop - fname_prefix.start) == 0)
+			    strlen(fname) >= fname_prefix_len &&
+			    strncmp(fname, fname_prefix.start, fname_prefix_len) == 0)
 			{
 				/// Update common prefix
 				if (first) {
@@ -428,7 +429,6 @@ filename_completer(rpl_env_t *env, editor_t *eb)
 				} else {
 					if (diffchar > 0) {
 						diffchar = get_first_diffchar(pref_intersec, fname);
-						// memset(pref_intersec + diffchar, 0, RPL_MAX_PREFIX - diffchar);
 						*(pref_intersec + diffchar) = 0;
 					}
 				}
@@ -453,11 +453,10 @@ filename_completer(rpl_env_t *env, editor_t *eb)
 		os_findclose(d);
 	}
 	ssize_t pref_intersec_len = strlen(pref_intersec);
-	/// TODO replace strlen(fname_prefix_str) with length of stringview (fname_prefix.stop - ...)
 	if (pref_intersec_len > 0) {
-		sbuf_insert_at(eb->input, pref_intersec + strlen(fname_prefix_str), eb->pos);
-		eb->pos += pref_intersec_len - strlen(fname_prefix_str);
-		env->completions->cut_stop -= strlen(fname_prefix_str) - pref_intersec_len;
+		sbuf_insert_at(eb->input, pref_intersec + fname_prefix_len, eb->pos);
+		eb->pos += pref_intersec_len - fname_prefix_len;
+		env->completions->cut_stop -= fname_prefix_len - pref_intersec_len;
 	}
 }
 
