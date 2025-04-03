@@ -1379,6 +1379,15 @@ edit_line(rpl_env_t * env, const char *prompt_text)
 				edit_swap_char(env, &eb);
 				edit_refresh_history_hint(env, &eb);
 				break;
+			case KEY_CTRL_O:
+			case KEY_CTRL_Q:
+			case KEY_CTRL_R:
+			case KEY_CTRL_S:
+			case KEY_CTRL_V:
+			case KEY_CTRL_X:
+				/// Don't insert these control sequences into edit buffer,
+				/// but ignore them
+				break;
 
 				// Editing
 			case KEY_SHIFT_TAB:
