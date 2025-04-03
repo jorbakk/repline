@@ -1260,7 +1260,9 @@ edit_line(rpl_env_t * env, const char *prompt_text)
 		// else if (c == KEY_CTRL_C || c == KEY_EVENT_STOP) {
 		else if (c == KEY_EVENT_STOP) {
 			break;              // ctrl+C or STOP event quits with NULL
-		} else if (c == KEY_ESC) {
+		} else if (c == KEY_CTRL_C) {
+			/// NOTE changed clearing the edit buffer when pressing ESC to Ctrl-c
+			///      as this is common with other shells
 			/// NOTE deactivated leaving the repl on pressing ESC on a blank line
 			// if (eb.pos == 0 && editor_pos_is_at_end(&eb)) break;  // ESC on empty input returns with empty input
 			edit_delete_all(env, &eb);  // otherwise delete the current input
@@ -1409,6 +1411,7 @@ edit_line(rpl_env_t * env, const char *prompt_text)
 			case KEY_CTRL_S:
 			case KEY_CTRL_V:
 			case KEY_CTRL_X:
+			case KEY_ESC:
 				/// Don't insert these control sequences into edit buffer,
 				/// but ignore them
 				break;
