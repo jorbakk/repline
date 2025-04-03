@@ -368,13 +368,14 @@ history_get_with_prefix(const history_t * h, ssize_t n, const char *prefix)
 		db_exec(&h->db, DB_GET_PREV_CNT);
 		int cnt = db_out_int(&h->db, DB_GET_PREV_CNT, 1);
 		db_reset(&h->db, DB_GET_PREV_CNT);
-		if (n < 0 || n > cnt)
-			return NULL;
+		if (n < 0 || n > cnt) return NULL;
 		db_in_int(&h->db, DB_GET_PREV_CMD, 1, getpid());
 		db_in_int(&h->db, DB_GET_PREV_CMD, 2, n - 1);
 		int ret = db_exec(&h->db, DB_GET_PREV_CMD);
-		if (ret != DB_ROW)
+		if (ret != DB_ROW) {
+			db_reset(&h->db, DB_GET_PREV_CMD);
 			return NULL;
+		}
 		const char *entry =
 		    mem_strdup(h->mem,
 		               (const char *)db_out_txt(&h->db, DB_GET_PREV_CMD, 1));
@@ -387,13 +388,18 @@ history_get_with_prefix(const history_t * h, ssize_t n, const char *prefix)
 	db_exec(&h->db, DB_GET_PREF_CNT);
 	int cnt = db_out_int(&h->db, DB_GET_PREF_CNT, 1);
 	db_reset(&h->db, DB_GET_PREF_CNT);
-	if (n < 0 || n > cnt)
+	if (n < 0 || n > cnt) {
+		mem_free(h->mem, prefix_param);
 		return NULL;
+	}
 	db_in_txt(&h->db, DB_GET_PREF_CMD, 1, prefix_param);
 	db_in_int(&h->db, DB_GET_PREF_CMD, 2, n - 1);
 	int ret = db_exec(&h->db, DB_GET_PREF_CMD);
-	if (ret != DB_ROW)
+	if (ret != DB_ROW) {
+		db_reset(&h->db, DB_GET_PREF_CMD);
+		mem_free(h->mem, prefix_param);
 		return NULL;
+	}
 	const char *entry =
 	    mem_strdup(h->mem,
 	               (const char *)db_out_txt(&h->db, DB_GET_PREF_CMD, 1));
