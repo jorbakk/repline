@@ -55,7 +55,7 @@ struct tty_s {
 // Forward declarations of platform dependent primitives below
 //-------------------------------------------------------------
 
-rpl_private bool tty_readc_noblock(tty_t * tty, uint8_t * c, long timeout_ms);  // does not modify `c` when no input (false is returned)
+rpl_private bool tty_readc_noblock(tty_t *tty, uint8_t *c, long timeout_ms);  // does not modify `c` when no input (false is returned)
 
 //-------------------------------------------------------------
 // Key code helpers
@@ -76,7 +76,7 @@ code_is_ascii_char(code_t c, char *chr)
 }
 
 rpl_private bool
-code_is_unicode(code_t c, unicode_t * uchr)
+code_is_unicode(code_t c, unicode_t *uchr)
 {
 	if (c <= KEY_UNICODE_MAX) {
 		if (uchr != NULL)
@@ -101,7 +101,7 @@ code_is_virt_key(code_t c)
 static code_t modify_code(code_t code);
 
 static code_t
-tty_read_utf8(tty_t * tty, uint8_t c0)
+tty_read_utf8(tty_t *tty, uint8_t c0)
 {
 	uint8_t buf[5];
 	memset(buf, 0, 5);
@@ -145,11 +145,11 @@ tty_read_utf8(tty_t * tty, uint8_t c0)
 }
 
 // pop a code from the pushback buffer.
-static bool tty_code_pop(tty_t * tty, code_t * code);
+static bool tty_code_pop(tty_t *tty, code_t *code);
 
 // read a single char/key 
 rpl_private bool
-tty_read_timeout(tty_t * tty, long timeout_ms, code_t * code)
+tty_read_timeout(tty_t *tty, long timeout_ms, code_t *code)
 {
 	// is there a push_count back code?
 	if (tty_code_pop(tty, code)) {
@@ -228,7 +228,7 @@ modify_code(code_t code)
 
 // read a single char/key 
 rpl_private code_t
-tty_read(tty_t * tty)
+tty_read(tty_t *tty)
 {
 	code_t code;
 	if (!tty_read_timeout(tty, -1, &code))
@@ -241,13 +241,13 @@ tty_read(tty_t * tty)
 //-------------------------------------------------------------
 
 rpl_private bool
-tty_read_esc_response(tty_t * tty, char esc_start, bool final_st, char *buf,
+tty_read_esc_response(tty_t *tty, char esc_start, bool final_st, char *buf,
                       ssize_t buflen)
 {
 	buf[0] = 0;
 	ssize_t len = 0;
 	uint8_t c = 0;
-	if (!tty_readc_noblock(tty, &c, 2 * tty->esc_initial_timeout)
+	if (!tty_readc_noblock(tty, &c, 2 *tty->esc_initial_timeout)
 	    || c != '\x1B') {
 		debug_msg("initial esc response failed: 0x%02x\n", c);
 		return false;
@@ -289,7 +289,7 @@ tty_read_esc_response(tty_t * tty, char esc_start, bool final_st, char *buf,
 //-------------------------------------------------------------
 
 static bool
-tty_code_pop(tty_t * tty, code_t * code)
+tty_code_pop(tty_t *tty, code_t *code)
 {
 	if (tty->push_count <= 0)
 		return false;
@@ -299,7 +299,7 @@ tty_code_pop(tty_t * tty, code_t * code)
 }
 
 rpl_private void
-tty_code_pushback(tty_t * tty, code_t c)
+tty_code_pushback(tty_t *tty, code_t c)
 {
 	// note: must be signal safe
 	if (tty->push_count >= TTY_PUSH_MAX)
@@ -313,7 +313,7 @@ tty_code_pushback(tty_t * tty, code_t c)
 //-------------------------------------------------------------
 
 rpl_private bool
-tty_cpop(tty_t * tty, uint8_t * c)
+tty_cpop(tty_t *tty, uint8_t *c)
 {
 	if (tty->cpush_count <= 0) {    // do not modify c on failure (see `tty_decode_unicode`)
 		return false;
@@ -325,7 +325,7 @@ tty_cpop(tty_t * tty, uint8_t * c)
 }
 
 static void
-tty_cpush(tty_t * tty, const char *s)
+tty_cpush(tty_t *tty, const char *s)
 {
 	ssize_t len = rpl_strlen(s);
 	if (tty->push_count + len > TTY_PUSH_MAX) {
@@ -342,7 +342,7 @@ tty_cpush(tty_t * tty, const char *s)
 
 // convenience function for small sequences
 static void
-tty_cpushf(tty_t * tty, const char *fmt, ...)
+tty_cpushf(tty_t *tty, const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
@@ -355,7 +355,7 @@ tty_cpushf(tty_t * tty, const char *fmt, ...)
 }
 
 rpl_private void
-tty_cpush_char(tty_t * tty, uint8_t c)
+tty_cpush_char(tty_t *tty, uint8_t c)
 {
 	uint8_t buf[2];
 	buf[0] = c;
@@ -382,21 +382,21 @@ csi_mods(code_t mods)
 
 // Push ESC [ <vtcode> ; <mods> ~
 static void
-tty_cpush_csi_vt(tty_t * tty, code_t mods, uint32_t vtcode)
+tty_cpush_csi_vt(tty_t *tty, code_t mods, uint32_t vtcode)
 {
 	tty_cpushf(tty, "\x1B[%u;%u~", vtcode, csi_mods(mods));
 }
 
 // push ESC [ 1 ; <mods> <xcmd>
 static void
-tty_cpush_csi_xterm(tty_t * tty, code_t mods, char xcode)
+tty_cpush_csi_xterm(tty_t *tty, code_t mods, char xcode)
 {
 	tty_cpushf(tty, "\x1B[1;%u%c", csi_mods(mods), xcode);
 }
 
 // push ESC [ <unicode> ; <mods> u
 static void
-tty_cpush_csi_unicode(tty_t * tty, code_t mods, uint32_t unicode)
+tty_cpush_csi_unicode(tty_t *tty, code_t mods, uint32_t unicode)
 {
 	if ((unicode < 0x80 && mods == 0) ||
 	    (mods == KEY_MOD_CTRL && unicode < ' ' && unicode != KEY_TAB
@@ -413,11 +413,11 @@ tty_cpush_csi_unicode(tty_t * tty, code_t mods, uint32_t unicode)
 // Init
 //-------------------------------------------------------------
 
-static bool tty_init_raw(tty_t * tty);
-static void tty_done_raw(tty_t * tty);
+static bool tty_init_raw(tty_t *tty);
+static void tty_done_raw(tty_t *tty);
 
 static bool
-tty_init_utf8(tty_t * tty)
+tty_init_utf8(tty_t *tty)
 {
 #ifdef _WIN32
 	tty->is_utf8 = true;
@@ -431,7 +431,7 @@ tty_init_utf8(tty_t * tty)
 }
 
 rpl_private tty_t *
-tty_new(alloc_t * mem, int fd_in)
+tty_new(alloc_t *mem, int fd_in)
 {
 	tty_t *tty = mem_zalloc_tp(mem, tty_t);
 	tty->mem = mem;
@@ -450,7 +450,7 @@ tty_new(alloc_t * mem, int fd_in)
 }
 
 rpl_private void
-tty_free(tty_t * tty)
+tty_free(tty_t *tty)
 {
 	if (tty == NULL)
 		return;
@@ -460,7 +460,7 @@ tty_free(tty_t * tty)
 }
 
 rpl_private bool
-tty_is_utf8(const tty_t * tty)
+tty_is_utf8(const tty_t *tty)
 {
 	if (tty == NULL)
 		return true;
@@ -468,7 +468,7 @@ tty_is_utf8(const tty_t * tty)
 }
 
 rpl_private bool
-tty_term_resize_event(tty_t * tty)
+tty_term_resize_event(tty_t *tty)
 {
 	if (tty == NULL)
 		return true;
@@ -481,7 +481,7 @@ tty_term_resize_event(tty_t * tty)
 }
 
 rpl_private void
-tty_set_esc_delay(tty_t * tty, long initial_delay_ms, long followup_delay_ms)
+tty_set_esc_delay(tty_t *tty, long initial_delay_ms, long followup_delay_ms)
 {
 	tty->esc_initial_timeout =
 	    (initial_delay_ms <
@@ -497,7 +497,7 @@ tty_set_esc_delay(tty_t * tty, long initial_delay_ms, long followup_delay_ms)
 #if !defined(_WIN32)
 
 static bool
-tty_readc_blocking(tty_t * tty, uint8_t * c)
+tty_readc_blocking(tty_t *tty, uint8_t *c)
 {
 	if (tty_cpop(tty, c))
 		return true;
@@ -511,7 +511,7 @@ tty_readc_blocking(tty_t * tty, uint8_t * c)
 
 // non blocking read -- with a small timeout used for reading escape sequences.
 rpl_private bool
-tty_readc_noblock(tty_t * tty, uint8_t * c, long timeout_ms)
+tty_readc_noblock(tty_t *tty, uint8_t *c, long timeout_ms)
 {
 	// in our pushback buffer?
 	if (tty_cpop(tty, c))
@@ -591,7 +591,7 @@ tty_readc_noblock(tty_t * tty, uint8_t * c, long timeout_ms)
 
 #if defined(TIOCSTI)
 rpl_private bool
-tty_async_stop(const tty_t * tty)
+tty_async_stop(const tty_t *tty)
 {
 	// insert ^C in the input stream
 	char c = KEY_CTRL_C;
@@ -599,7 +599,7 @@ tty_async_stop(const tty_t * tty)
 }
 #else
 rpl_private bool
-tty_async_stop(const tty_t * tty)
+tty_async_stop(const tty_t *tty)
 {
 	return false;
 }
@@ -645,26 +645,30 @@ sigaction_is_valid(struct sigaction *sa)
 	        && sa->sa_handler != SIG_IGN);
 }
 
-// Generic signal handler
+/// Generic signal handler
 static void
-sig_handler(int signum, siginfo_t * siginfo, void *uap)
+sig_handler(int signum, siginfo_t *siginfo, void *uap)
 {
 	if (signum == SIGWINCH) {
 		if (sig_tty != NULL) {
 			sig_tty->term_resize_event = true;
 		}
+	} else if (signum == SIGHUP) {
+		/// Exit handlers are installed via atexit() in repline.c
+		exit(EXIT_SUCCESS);
 	} else {
-		// the rest are termination signals; restore the terminal mode. (`tcsetattr` is signal-safe)
+		/// The rest are termination signals; restore the terminal mode. (`tcsetattr` is signal-safe)
 		if (sig_tty != NULL && sig_tty->raw_enabled) {
 			tcsetattr(sig_tty->fd_in, TCSAFLUSH, &sig_tty->orig_ios);
 			sig_tty->raw_enabled = false;
 		}
 	}
-	// call previous handler
+	/// Lookup the handler for signal sh->signum
 	signal_handler_t *sh = sighandlers;
 	while (sh->signum != 0 && sh->signum != signum) {
 		sh++;
 	}
+	/// Call previous handler
 	if (sh->signum == signum) {
 		if (sigaction_is_valid(&sh->action.previous)) {
 			(sh->action.previous.sa_sigaction) (signum, siginfo, uap);
@@ -673,7 +677,7 @@ sig_handler(int signum, siginfo_t * siginfo, void *uap)
 }
 
 static void
-signals_install(tty_t * tty)
+signals_install(tty_t *tty)
 {
 	sig_tty = tty;
 	// generic signal handler
@@ -683,7 +687,7 @@ signals_install(tty_t * tty)
 	handler.sa_sigaction = &sig_handler;
 	handler.sa_flags = SA_RESTART;
 	// install for all signals
-	for (signal_handler_t * sh = sighandlers; sh->signum != 0; sh++) {
+	for (signal_handler_t *sh = sighandlers; sh->signum != 0; sh++) {
 		if (sigaction(sh->signum, NULL, &sh->action.previous) == 0) {   // get previous
 			if (sh->action.previous.sa_handler != SIG_IGN) {    // if not to be ignored
 				if (sigaction(sh->signum, &handler, &sh->action.previous) < 0) {    // install our handler
@@ -700,7 +704,7 @@ static void
 signals_restore(void)
 {
 	// restore all signal handlers
-	for (signal_handler_t * sh = sighandlers; sh->signum != 0; sh++) {
+	for (signal_handler_t *sh = sighandlers; sh->signum != 0; sh++) {
 		if (sigaction_is_valid(&sh->action.previous)) {
 			sigaction(sh->signum, &sh->action.previous, NULL);
 		};
@@ -710,7 +714,7 @@ signals_restore(void)
 
 #else
 static void
-signals_install(tty_t * tty)
+signals_install(tty_t *tty)
 {
 	rpl_unused(tty);
 	// nothing
@@ -725,7 +729,7 @@ signals_restore(void)
 #endif
 
 rpl_private bool
-tty_start_raw(tty_t * tty)
+tty_start_raw(tty_t *tty)
 {
 	if (tty == NULL)
 		return false;
@@ -738,7 +742,7 @@ tty_start_raw(tty_t * tty)
 }
 
 rpl_private void
-tty_end_raw(tty_t * tty)
+tty_end_raw(tty_t *tty)
 {
 	if (tty == NULL)
 		return;
@@ -751,7 +755,7 @@ tty_end_raw(tty_t * tty)
 }
 
 static bool
-tty_init_raw(tty_t * tty)
+tty_init_raw(tty_t *tty)
 {
 	// Set input to raw mode. See <https://man7.org/linux/man-pages/man3/termios.3.html>.
 	if (tcgetattr(tty->fd_in, &tty->orig_ios) == -1)
@@ -775,7 +779,7 @@ tty_init_raw(tty_t * tty)
 }
 
 static void
-tty_done_raw(tty_t * tty)
+tty_done_raw(tty_t *tty)
 {
 	rpl_unused(tty);
 	signals_restore();
@@ -789,10 +793,10 @@ tty_done_raw(tty_t * tty)
 // to the character stream (instead of returning key codes).
 //-------------------------------------------------------------
 
-static void tty_waitc_console(tty_t * tty, long timeout_ms);
+static void tty_waitc_console(tty_t *tty, long timeout_ms);
 
 rpl_private bool
-tty_readc_noblock(tty_t * tty, uint8_t * c, long timeout_ms)
+tty_readc_noblock(tty_t *tty, uint8_t *c, long timeout_ms)
 {                               // don't modify `c` if there is no input
 	// in our pushback buffer?
 	if (tty_cpop(tty, c))
@@ -804,7 +808,7 @@ tty_readc_noblock(tty_t * tty, uint8_t * c, long timeout_ms)
 
 // Read from the console input events and push escape codes into the tty cbuffer.
 static void
-tty_waitc_console(tty_t * tty, long timeout_ms)
+tty_waitc_console(tty_t *tty, long timeout_ms)
 {
 	//  wait for a key down event
 	INPUT_RECORD inp;
@@ -971,7 +975,7 @@ tty_waitc_console(tty_t * tty, long timeout_ms)
 }
 
 rpl_private bool
-tty_async_stop(const tty_t * tty)
+tty_async_stop(const tty_t *tty)
 {
 	// send ^c
 	INPUT_RECORD events[2];
@@ -987,7 +991,7 @@ tty_async_stop(const tty_t * tty)
 }
 
 rpl_private bool
-tty_start_raw(tty_t * tty)
+tty_start_raw(tty_t *tty)
 {
 	if (tty->raw_enabled)
 		return true;
@@ -1003,7 +1007,7 @@ tty_start_raw(tty_t * tty)
 }
 
 rpl_private void
-tty_end_raw(tty_t * tty)
+tty_end_raw(tty_t *tty)
 {
 	if (!tty->raw_enabled)
 		return;
@@ -1012,7 +1016,7 @@ tty_end_raw(tty_t * tty)
 }
 
 static bool
-tty_init_raw(tty_t * tty)
+tty_init_raw(tty_t *tty)
 {
 	tty->hcon = GetStdHandle(STD_INPUT_HANDLE);
 	tty->has_term_resize_event = true;
@@ -1020,7 +1024,7 @@ tty_init_raw(tty_t * tty)
 }
 
 static void
-tty_done_raw(tty_t * tty)
+tty_done_raw(tty_t *tty)
 {
 	rpl_unused(tty);
 }

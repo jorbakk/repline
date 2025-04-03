@@ -603,11 +603,13 @@ edit_refresh_hint(rpl_env_t * env, editor_t * eb)
 static void
 edit_refresh_history_hint(rpl_env_t *env, editor_t *eb)
 {
+#if 0
 	FILE *logfile = fopen("/tmp/repline.log", "a");
 	fprintf(logfile, "refresh history hint, edit buffer size: %ld, edit_buf: '%s'\n",
 	  sbuf_len(eb->input),
 	  sbuf_string(eb->input));
 	fclose(logfile);
+#endif
 	if (eb->modified) {
 		eb->history_idx = 0;
 		eb->history_widx = 0;
@@ -617,9 +619,11 @@ edit_refresh_history_hint(rpl_env_t *env, editor_t *eb)
 	/// Though it shouldn't when only moving the cursor in a modified buffer, eb->pos == 0 also works ...
 	// if (eb->modified && eb->pos == 0) {
 	if (eb->modified && sbuf_len(eb->input) == 0) {
+#if 0
 		FILE *logfile = fopen("/tmp/repline.log", "a");
 		fprintf(logfile, "refresh history hint, clearing hint\n");
 		fclose(logfile);
+#endif
 		sbuf_clear(eb->hint);
 		// eb->history_idx = 0;
 		edit_refresh(env, eb);
@@ -629,10 +633,12 @@ edit_refresh_history_hint(rpl_env_t *env, editor_t *eb)
 	if (entry) {
 		debug_msg("input found in history: '%s', edit_buf: '%s'\n", entry,
 		          sbuf_string(eb->input));
+#if 0
 		FILE *logfile = fopen("/tmp/repline.log", "a");
 		fprintf(logfile, "input found in history: '%s', edit_buf: '%s'\n", entry,
 		          sbuf_string(eb->input));
 		fclose(logfile);
+#endif
 		sbuf_replace(eb->hint, entry + sbuf_len(eb->input));
 		if (eb->history_idx == 0)
 			eb->history_idx++;
@@ -640,10 +646,12 @@ edit_refresh_history_hint(rpl_env_t *env, editor_t *eb)
 		env->mem->free((char *)entry);
 #endif
 	} else {
+#if 0
 		FILE *logfile = fopen("/tmp/repline.log", "a");
 		fprintf(logfile, "no input found in history: '%s', edit_buf: '%s'\n", entry,
 		          sbuf_string(eb->input));
 		fclose(logfile);
+#endif
 		sbuf_clear(eb->hint);
 		eb->history_idx = 0;
 		eb->history_widx = 0;
