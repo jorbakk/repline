@@ -44,7 +44,7 @@ print_summary(void)
 
 
 void
-print_completions(rpl_env_t *env)
+print_completions(void)
 {
 	printf("completions count: %ld\n", env->completions->count);
 	for (ssize_t c = 0; c < env->completions->count; ++c) {
@@ -111,12 +111,12 @@ check_completions_apply(const char *str)
 
 
 void
-test_file_completion(char *input, int pos, char *res)
+test_file_completion(char *input, int pos, int res_count, int res_idx, char *res)
 {
 	setup_ebuf(input, pos);
 	completions_generate(env, eb, RPL_MAX_COMPLETIONS_TO_TRY);
-	// print_completions(env);
-	check_completion(1, 0, "testdir/");
+	// print_completions();
+	check_completion(res_count, res_idx, res);
 	clear_ebuf();
 }
 
@@ -151,7 +151,11 @@ setup(void)
 	env = rpl_get_env();
 	eb = create_editbuf(env, "%");
 	system("mkdir -p testdir");
-	system("touch testdir/file_01");
+	char cmd[64] = {0};
+	for (int i = 1; i <= 5; i++) {
+		sprintf(cmd, "touch testdir/file_%02d", i);
+		system(cmd);
+	}
 }
 
 
@@ -167,13 +171,29 @@ main(void)
 {
 	setup();
 
-	for (int pos = 0; pos <= strlen("dir"); pos++) {
-		test_file_completion("tes", pos, "testdir/");
+	for (int pos = 0; pos < strlen("tes"); pos++) {
+		test_file_completion("tes", pos, 1, 0, "testdir/");
 	}
 
-	test_file_completion_apply("tes", 4, "testdir/");
-	test_file_completion_apply("testdir/file", 8, "testdir/file_01");
-	test_file_completion_apply("testdir/file", 4, "testdir/file_01");
+	for (int pos = 0; pos < strlen("tes"); pos++) {
+		test_file_completion_apply("tes", pos, "testdir/");
+	}
+
+	for (int pos = 0; pos < strlen("ls "); pos++) {
+		test_file_completion_apply("ls tes", pos, "ls tes");
+	}
+
+	for (int pos = strlen("ls "); pos < strlen("ls tes"); pos++) {
+		test_file_completion_apply("ls tes", pos, "ls testdir/");
+	}
+
+	for (int pos = strlen("testdir"); pos < strlen("testdir/file"); pos++) {
+		test_file_completion("testdir/file", pos, 5, 0, "file_01");
+	}
+
+	for (int pos = strlen("test"); pos < strlen("testdir/file"); pos++) {
+		test_file_completion_apply("testdir/file", pos, "testdir/file_01");
+	}
 
 	print_summary();
 	// teardown();
