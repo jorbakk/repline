@@ -47,7 +47,7 @@ Contents:
 ///   Returns NULL on error, or if the user typed ctrl+d or ctrl+c.
 ///
 /// If the standard input (`stdin`) has no editing capability 
-/// (like a dumb terminal (e.g. `TERM`=`dumb`), running in a debuggen, a pipe or redirected file, etc.)
+/// (like a dumb terminal (e.g. `TERM`=`dumb`), running in a debugger, a pipe or redirected file, etc.)
 /// the input is read directly from the input stream up to the 
 /// next line without editing capability.
 /// See also \a rpl_set_prompt_marker(), \a rpl_style_def()

@@ -731,6 +731,7 @@ rpl_env_free(rpl_env_t * env)
 	if (env == NULL)
 		return;
 	history_save(env->history);
+	history_close(env->history);
 	history_free(env->history);
 	completions_free(env->completions);
 	bbcode_free(env->bbcode);

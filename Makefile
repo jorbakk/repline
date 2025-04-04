@@ -1,6 +1,6 @@
 CFLAGS  += -fPIC -Wno-unused-function -DRPL_HIST_IMPL_SQLITE
 LDFLAGS += -lsqlite3
-PREFIX   = /usr/local
+PREFIX  ?= /usr/local
 
 ifeq ($(DEBUG), 1)
 	CFLAGS += -g # -DRPL_DEBUG_TO_FILE

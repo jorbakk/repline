@@ -228,7 +228,6 @@ history_free(history_t * h)
 {
 	if (h == NULL)
 		return;
-	sqlite3_close(h->db.dbh);
 	mem_free(h->mem, h->fname);
 	h->fname = NULL;
 	mem_free(h->mem, h);        // free ourselves
@@ -354,6 +353,7 @@ history_close(history_t * h)
 	db_exec(&h->db, DB_SET_PID_NULL);
 	db_reset(&h->db, DB_SET_PID_NULL);
 	db_exec_str(&h->db, "COMMIT");
+	db_close(&h->db);
 }
 
 /// Parameter n is the history command index from latest to oldest, starting with 1
