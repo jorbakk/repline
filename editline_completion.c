@@ -4,7 +4,7 @@
 
 // return true if anything changed
 static bool
-edit_complete(rpl_env_t * env, editor_t * eb, ssize_t idx)
+edit_complete(rpl_env_t *env, editor_t *eb, ssize_t idx)
 {
 	editor_start_modify(eb);
 	ssize_t newpos = completions_apply(env->completions, idx, eb->input, eb->pos);
@@ -20,7 +20,7 @@ edit_complete(rpl_env_t * env, editor_t * eb, ssize_t idx)
 
 
 rpl_private void
-sbuf_append_tagged(stringbuf_t * sb, const char *tag, const char *content)
+sbuf_append_tagged(stringbuf_t *sb, const char *tag, const char *content)
 {
 	sbuf_appendf(sb, "[%s]", tag);
 	sbuf_append(sb, content);
@@ -28,7 +28,7 @@ sbuf_append_tagged(stringbuf_t * sb, const char *tag, const char *content)
 }
 
 static void
-editor_append_completion(rpl_env_t * env, editor_t * eb, ssize_t idx,
+editor_append_completion(rpl_env_t *env, editor_t *eb, ssize_t idx,
                          ssize_t width, bool numbered, bool selected)
 {
 	const char *help = NULL;
@@ -71,7 +71,7 @@ editor_append_completion(rpl_env_t * env, editor_t * eb, ssize_t idx,
 #define RPL_DISPLAY3_WIDTH  (3*RPL_DISPLAY3_COL + 2*2)  // 76
 
 static void
-editor_append_completion2(rpl_env_t * env, editor_t * eb, ssize_t col_width,
+editor_append_completion2(rpl_env_t *env, editor_t *eb, ssize_t col_width,
                           ssize_t idx1, ssize_t idx2, ssize_t selected)
 {
 	editor_append_completion(env, eb, idx1, col_width, true,
@@ -82,7 +82,7 @@ editor_append_completion2(rpl_env_t * env, editor_t * eb, ssize_t col_width,
 }
 
 static void
-editor_append_completion3(rpl_env_t * env, editor_t * eb, ssize_t col_width,
+editor_append_completion3(rpl_env_t *env, editor_t *eb, ssize_t col_width,
                           ssize_t idx1, ssize_t idx2, ssize_t idx3,
                           ssize_t selected)
 {
@@ -97,7 +97,7 @@ editor_append_completion3(rpl_env_t * env, editor_t * eb, ssize_t col_width,
 }
 
 static ssize_t
-edit_completions_max_width(rpl_env_t * env, ssize_t count)
+edit_completions_max_width(rpl_env_t *env, ssize_t count)
 {
 	ssize_t max_width = 0;
 	for (ssize_t i = 0; i < count; i++) {
@@ -117,7 +117,7 @@ edit_completions_max_width(rpl_env_t * env, ssize_t count)
 }
 
 static void
-edit_completion_menu(rpl_env_t * env, editor_t * eb, bool more_available)
+edit_completion_menu(rpl_env_t *env, editor_t *eb, bool more_available)
 {
 	ssize_t count = completions_count(env->completions);
 	ssize_t count_displayed = count;
