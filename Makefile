@@ -5,7 +5,7 @@ PREFIX  ?= /usr/local
 .PHONY: all test clean install
 
 ifeq ($(DEBUG), 1)
-	CFLAGS += -g # -DRPL_DEBUG_TO_FILE
+  CFLAGS += -g # -DRPL_DEBUG_TO_FILE
 endif
 
 SRCS = attr.c bbcode.c bbcode_colors.c common.c completers.c completions.c editline.c editline_completion.c editline_help.c editline_history.c example.c highlight.c history.c history_sqlite.c repline.c stringbuf.c term.c term_color.c test_colors.c tty.c tty_esc.c undo.c wcwidth.c

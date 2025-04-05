@@ -63,7 +63,6 @@ setup_ebuf(char *input, int pos, int line)
 	eb->pos = pos;
 	puts("-----------------------------------------------------------");
 	printf("test #%d at %s:%d\n", total_count, __FILE__, line);
-	// printf("input: \"%s\", pos: %d\n", input, pos);
 	printf("input[%2d]   %% %s\n", pos, input);
 	printf("              %*c\n", pos + 1, '^');
 }
