@@ -56,13 +56,13 @@ print_completions(void)
 
 
 void
-setup_ebuf(char *input, int pos)
+setup_ebuf(char *input, int pos, int line)
 {
 	total_count++;
 	sbuf_append(eb->input, input);
 	eb->pos = pos;
 	puts("-----------------------------------------------------------");
-	printf("test: %d\n", total_count);
+	printf("test #%d at %s:%d\n", total_count, __FILE__, line);
 	// printf("input: \"%s\", pos: %d\n", input, pos);
 	printf("input[%2d]   %% %s\n", pos, input);
 	printf("              %*c\n", pos + 1, '^');
@@ -111,9 +111,9 @@ check_completions_apply(const char *str)
 
 
 void
-test_file_completion(char *input, int pos, int res_count, int res_idx, char *res)
+test_file_completion(char *input, int pos, int res_count, int res_idx, char *res, int line)
 {
-	setup_ebuf(input, pos);
+	setup_ebuf(input, pos, line);
 	completions_generate(env, eb, RPL_MAX_COMPLETIONS_TO_TRY);
 	// print_completions();
 	check_completion(res_count, res_idx, res);
@@ -122,9 +122,9 @@ test_file_completion(char *input, int pos, int res_count, int res_idx, char *res
 
 
 void
-test_file_completion_apply(char *input, int pos, char *res)
+test_file_completion_apply(char *input, int pos, char *res, int line)
 {
-	setup_ebuf(input, pos);
+	setup_ebuf(input, pos, line);
 	completions_generate(env, eb, RPL_MAX_COMPLETIONS_TO_TRY);
 	completions_apply(env->completions, 0, eb->input, eb->pos);
 	check_completions_apply(res);
@@ -172,27 +172,27 @@ main(void)
 	setup();
 
 	for (int pos = 0; pos < strlen("tes"); pos++) {
-		test_file_completion("tes", pos, 1, 0, "testdir/");
+		test_file_completion("tes", pos, 1, 0, "testdir/", __LINE__);
 	}
 
 	for (int pos = 0; pos < strlen("tes"); pos++) {
-		test_file_completion_apply("tes", pos, "testdir/");
+		test_file_completion_apply("tes", pos, "testdir/", __LINE__);
 	}
 
 	for (int pos = 0; pos < strlen("ls "); pos++) {
-		test_file_completion_apply("ls tes", pos, "ls tes");
+		test_file_completion_apply("ls tes", pos, "ls tes", __LINE__);
 	}
 
 	for (int pos = strlen("ls "); pos < strlen("ls tes"); pos++) {
-		test_file_completion_apply("ls tes", pos, "ls testdir/");
+		test_file_completion_apply("ls tes", pos, "ls testdir/", __LINE__);
 	}
 
 	for (int pos = strlen("testdir"); pos < strlen("testdir/file"); pos++) {
-		test_file_completion("testdir/file", pos, 5, 0, "file_01");
+		test_file_completion("testdir/file", pos, 5, 0, "file_01", __LINE__);
 	}
 
 	for (int pos = strlen("test"); pos < strlen("testdir/file"); pos++) {
-		test_file_completion_apply("testdir/file", pos, "testdir/file_01");
+		test_file_completion_apply("testdir/file", pos, "testdir/file_01", __LINE__);
 	}
 
 	print_summary();

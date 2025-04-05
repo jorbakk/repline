@@ -31,7 +31,7 @@ test: test/completion
 	cd test && ./completion
 
 clean:
-	rm -rf *.o librepline.a librepline.so example test_colors
+	rm -rf *.o librepline.a librepline.so example test_colors test/completion
 
 cscope.out: $(SRCS)
 	cscope -b $(SRCS)
