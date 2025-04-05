@@ -2,6 +2,8 @@ CFLAGS  += -fPIC -Wno-unused-function -DRPL_HIST_IMPL_SQLITE
 LDFLAGS += -lsqlite3
 PREFIX  ?= /usr/local
 
+.PHONY: all test clean install
+
 ifeq ($(DEBUG), 1)
 	CFLAGS += -g # -DRPL_DEBUG_TO_FILE
 endif
@@ -15,15 +17,18 @@ repline.o: $(SRCS) $(HDRS)
 
 librepline.a: repline.o
 	$(AR) src $@ $<
-
 librepline.so: repline.o
 	$(CC) -shared $(LDFLAGS) -o $@ $<
 
 example: example.o repline.o
 	$(CC) -o $@ $^ $(LDFLAGS) 
-
 test_colors: test_colors.c repline.o
 	$(CC) -o $@ $^ $(LDFLAGS) 
+test/completion: test/completion.c $(SRCS)
+	$(CC) -o $@ $< $(LDFLAGS)
+
+test: test/completion
+	cd test && ./completion
 
 clean:
 	rm -rf *.o librepline.a librepline.so example test_colors
