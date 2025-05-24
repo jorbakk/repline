@@ -4,7 +4,7 @@ PREFIX  ?= /usr/local
 
 .PHONY: all test clean install
 
-ifeq ($(DEBUG), 1)
+ifeq ($(DEBUG),1)
   CFLAGS += -g # -DRPL_DEBUG_TO_FILE
 endif
 

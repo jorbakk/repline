@@ -793,10 +793,14 @@ rpl_env_create(rpl_malloc_fun_t * _malloc, rpl_realloc_fun_t * _realloc,
 	env->multiline_eol = '\\';
 
 	bbcode_style_def(env->bbcode, "rpl-prompt", "ansi-green");
-	bbcode_style_def(env->bbcode, "rpl-info", "ansi-darkgray");
+	// bbcode_style_def(env->bbcode, "rpl-info", "ansi-darkgray");
+	// bbcode_style_def(env->bbcode, "rpl-info", "ansi-gray");
+	bbcode_style_def(env->bbcode, "rpl-info", "#686868");
 	bbcode_style_def(env->bbcode, "rpl-diminish", "ansi-lightgray");
 	bbcode_style_def(env->bbcode, "rpl-emphasis", "#ffffd7");
-	bbcode_style_def(env->bbcode, "rpl-hint", "ansi-darkgray");
+	// bbcode_style_def(env->bbcode, "rpl-hint", "ansi-darkgray");
+	// bbcode_style_def(env->bbcode, "rpl-hint", "ansi-gray");
+	bbcode_style_def(env->bbcode, "rpl-hint", "#686868");
 	bbcode_style_def(env->bbcode, "rpl-error", "#d70000");
 	bbcode_style_def(env->bbcode, "rpl-bracematch", "ansi-white");  //  color = #F7DC6F" );
 
