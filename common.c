@@ -340,7 +340,12 @@ unicode_from_qutf8(const uint8_t * s, ssize_t len, ssize_t * count)
 rpl_private void
 debug_msg(const char *fmt, ...)
 {
-	if (getenv("REPLINE_DEBUG")) {
+#ifdef REPLINE_DEBUG
+	static bool repline_debug = true;
+#else
+	static bool repline_debug = false;
+#endif
+	if (repline_debug || getenv("REPLINE_DEBUG")) {
 		va_list args;
 		va_start(args, fmt);
 		vfprintf(stderr, fmt, args);
@@ -351,13 +356,19 @@ debug_msg(const char *fmt, ...)
 rpl_private void
 debug_msg(const char *fmt, ...)
 {
+#ifdef REPLINE_DEBUG
+	static bool repline_debug = true;
+#else
+	static bool repline_debug = false;
+#endif
 	static int debug_init;
-	static const char *debug_fname = "repline.debug.txt";
+	static char debug_fname[128];
 	// initialize?
 	if (debug_init == 0) {
 		debug_init = -1;
 		const char *rdebug = getenv("REPLINE_DEBUG");
-		if (rdebug != NULL && strcmp(rdebug, "1") == 0) {
+		if (repline_debug || (rdebug != NULL && strcmp(rdebug, "1") == 0)) {
+			snprintf(debug_fname, 128, "/tmp/repline.log.%d", getpid());
 			FILE *fdbg = fopen(debug_fname, "w");
 			if (fdbg != NULL) {
 				debug_init = 1;
