@@ -454,7 +454,7 @@ filename_completer(rpl_env_t *env, editor_t *eb)
 	}
 	ssize_t pref_intersec_len = strlen(pref_intersec);
 	if (pref_intersec_len > 0) {
-		sbuf_insert_at(eb->input, pref_intersec + fname_prefix_len, eb->pos);
+		sbuf_insert_at(eb->input, pref_intersec + fname_prefix_len, sbuf_len(eb->input));
 		eb->pos += pref_intersec_len - fname_prefix_len;
 		env->completions->cut_stop -= fname_prefix_len - pref_intersec_len;
 	}
