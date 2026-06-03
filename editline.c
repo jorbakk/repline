@@ -46,8 +46,7 @@ static void
 dump_editor(editor_t * eb)
 {
 	refresh_cnt++;
-	debug_msg
-	    ("--------------------------------------------------------------------------------\n");
+	debug_msg("-------------------------------- editor dump -----------------------------------\n");
 	debug_msg("input     : %s\n" "hint      : %s\n" "rowcnt    : %d\n"
 	          "rowidx    : %d\n" "pos       : %d\n" "modified  : %s\n"
 	          "hist_idx  : %d\n" "hist_widx : %d\n" "hist_wpos : %d\n"
@@ -55,8 +54,7 @@ dump_editor(editor_t * eb)
 	          (size_t)eb->cur_rows, (size_t)eb->cur_row, (size_t)eb->pos,
 	          eb->modified ? "true" : "false", eb->history_idx,
 	          eb->history_widx, eb->history_wpos, refresh_cnt);
-	debug_msg
-	    ("................................................................................\n");
+	debug_msg("................................................................................\n");
 }
 
 //-------------------------------------------------------------
@@ -320,6 +318,7 @@ edit_refresh_rows(rpl_env_t * env, editor_t * eb, stringbuf_t * input,
 static void
 edit_refresh(rpl_env_t * env, editor_t * eb)
 {
+	debug_msg("edit_refresh() **\n");
 	dump_editor(eb);
 	// calculate the new cursor row and total rows needed
 	ssize_t promptw, cpromptw;
@@ -579,15 +578,19 @@ editor_append_hint_help(editor_t * eb, const char *help)
 static void
 edit_refresh_hint(rpl_env_t * env, editor_t * eb)
 {
-	debug_msg("edit_refresh_hint(), hint before: %s\n", sbuf_string(eb->hint));
+	debug_msg("edit_refresh_hint(), hint before: '%s', no_hint: %s, delay: %ld\n", sbuf_string(eb->hint),
+	  env->no_hint ? "yes" : "no", env->hint_delay);
 	if (env->no_hint || env->hint_delay > 0) {
 		// refresh without hint first
 		edit_refresh(env, eb);
-		if (env->no_hint)
+		if (env->no_hint) {
+			debug_msg("edit_refresh_hint(), no hint\n");
 			return;
+		}
 	}
 	const char *help = NULL;
 	const char *hint = completions_get_hint(env->completions, 0, &help);
+	debug_msg("edit_refresh_hint(), hint after completions: '%s'\n", hint);
 	if (hint != NULL) {
 		sbuf_replace(eb->hint, hint);
 		editor_append_hint_help(eb, help);
@@ -597,7 +600,7 @@ edit_refresh_hint(rpl_env_t * env, editor_t * eb)
 		// refresh with hint directly
 		edit_refresh(env, eb);
 	}
-	debug_msg("edit_refresh_hint(), hint after: %s\n", sbuf_string(eb->hint));
+	debug_msg("edit_refresh_hint(), hint on return: '%s'\n", sbuf_string(eb->hint));
 }
 
 static void

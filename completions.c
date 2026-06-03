@@ -162,19 +162,24 @@ completions_get_help(completions_t * cms, ssize_t index)
 rpl_private const char *
 completions_get_hint(completions_t * cms, ssize_t index, const char **help)
 {
+	debug_msg("completions_get_hint(), index: %ld\n", index);
 	if (help != NULL) {
 		*help = NULL;
 	}
 	completion_t *cm = completions_get(cms, index);
-	if (cm == NULL)
+	if (cm == NULL) {
+		debug_msg("completions_get_hint(), no completion, returning\n");
 		return NULL;
+	}
 	ssize_t len = rpl_strlen(cm->replacement);
 	/// FIXME is this needed?
 	// if (len < cm->delete_before)
 		// return NULL;
 	// const char *hint = (cm->replacement + cm->delete_before);
 	/// FIXME is this a good replacement?
+	debug_msg("completions_get_hint(), replacement: %s, cut_start: %d\n", cm->replacement, cms->cut_start);
 	const char *hint = (cm->replacement + cms->cut_start);
+	debug_msg("completions_get_hint(), hint: %s\n", hint);
 	if (*hint == 0 || utf8_is_cont((uint8_t) (*hint)))
 		return NULL;            // utf8 boundary?
 	if (help != NULL) {
@@ -440,7 +445,8 @@ filename_completer(rpl_env_t *env, editor_t *eb)
 				if (os_is_dir(full_path)) {
 					sbuf_append_char(fname_str, rpl_dirsep());
 				}
-				if (str_find_forward(fname, strlen(fname), 0, &rpl_char_is_white, true) > 0) {
+				if (str_find_forward(fname, strlen(fname), 0, &rpl_char_is_white, true) > 0 ||
+				    str_find_forward(fname, strlen(fname), 0, &rpl_char_is_rc_shell_operator, true) > 0) {
 					sbuf_insert_char_at(fname_str, '\'', 0);
 					sbuf_append_char(fname_str, '\'');
 				};

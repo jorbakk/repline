@@ -1207,6 +1207,15 @@ rpl_char_is_separator(const char *s, long len)
 }
 
 rpl_public bool
+rpl_char_is_rc_shell_operator(const char *s, long len)
+{
+	if (s == NULL || len != 1)
+		return false;
+	const char c = *s;
+	return (strchr(" \t\r\n#;&|^$=`'{}()<>*?[", c) != NULL);
+}
+
+rpl_public bool
 rpl_char_is_dir_separator(const char *s, long len)
 {
 	if (s == NULL || len != 1)

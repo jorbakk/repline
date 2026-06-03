@@ -508,6 +508,9 @@ Contents:
 /// Convenience: character class for filename letters (_not in_ " \t\r\n`@$><=;|&\{\}\(\)\[\]]").
 	bool rpl_char_is_filename_letter(const char *s, long len);
 
+/// This is used for quoting file names for rc shell
+	bool rpl_char_is_rc_shell_operator(const char *s, long len);
+
 /// Convenience: If this is a token start, return the length. Otherwise return 0.
 	long rpl_is_token(const char *s, long pos,
 	                  rpl_is_char_class_fun_t * is_token_char);

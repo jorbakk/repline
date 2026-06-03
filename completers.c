@@ -389,11 +389,13 @@ match_extension(const char *name, const char *extensions)
 }
 
 
+/*
 typedef struct filename_closure_s {
 	const char *roots;
 	const char *extensions;
 	char dir_sep;
 } filename_closure_t;
+*/
 
 
 rpl_public char *
