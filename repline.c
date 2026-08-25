@@ -1,5 +1,5 @@
 //-------------------------------------------------------------
-// Usually we include all sources one file so no internal 
+// Usually we include all sources in one file so no internal 
 // symbols are public in the libray.
 // 
 // You can compile the entire library just as: 

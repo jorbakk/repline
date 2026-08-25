@@ -324,16 +324,69 @@ prim_add_completion(rpl_env_t * env, void *funenv, const char *replacement,
 	// completions_set_completer(env->completions, completer, arg);
 // }
 
+#define MAX_QUOTES (256)
+
+typedef struct lex_s {
+	int  quote_cnt;
+	int  idx[MAX_QUOTES];
+	bool is_quote[MAX_QUOTES];
+} lex_t;
+
+
+lex_t
+lex_quote(const char *input, char quote)
+{
+	lex_t r = {0};
+	bool in_quote = false;
+	for (const char *c = input; *c; c++) {
+		if (*c == quote) {
+			if (r.quote_cnt >= MAX_QUOTES) {
+				debug_msg("too many quotes in input\n");
+				return r;
+			}
+			in_quote = !in_quote;
+			r.idx[r.quote_cnt] = c - input;
+			r.is_quote[r.quote_cnt] = in_quote;
+			r.quote_cnt++;
+		}
+	}
+	return r;
+}
+
+
+bool
+in_quoted_str(lex_t *lex, ssize_t pos)
+{
+	for (int i = 0; i < lex->quote_cnt; i++) {
+		debug_msg("lex idx: %i, is_quote: %s\n", lex->idx[i], lex->is_quote[i] ? "yes" : "no");
+	}
+	bool r = false;
+	int i = lex->quote_cnt - 1;
+	for (; i >= 0; i--) {
+		if (pos == lex->idx[i]) break;
+		if (pos > lex->idx[i]) {
+			r = lex->is_quote[i];
+			break;
+		}
+	}
+	debug_msg("lexer found %d quotes, pos: %d is %s quote\n",
+	  lex->quote_cnt, pos, r ? "in" : "outside");
+	return r;
+}
+
+
 typedef struct stringview_s {
 	char *start, *stop;
 } stringview_t;
 
 
-/// Returns a string view that covers the word where the cursor (pos) is in.
-/// Paramters
-///   input: null-terminated string that will be parsed
-///   pos: cursor position
-///   delim: function that defines the word boundary characters
+/*
+  Function get_word() returns a string view that covers the word where the cursor (pos) is in.
+  Paramters
+    input: null-terminated string that will be parsed
+    pos: cursor position
+    delim: function that defines the word boundary characters
+*/
 stringview_t
 get_word(const char *input, ssize_t pos, rpl_is_char_class_fun_t *delim)
 {
@@ -347,11 +400,47 @@ get_word(const char *input, ssize_t pos, rpl_is_char_class_fun_t *delim)
 }
 
 
-/// Returns a string view that covers the word where the cursor (pos) is in.
-/// Paramters
-///   input: string view that will be parsed
-///   pos: cursor position
-///   delim: function that defines the word boundary characters
+stringview_t
+get_quoted_word(const char *input, ssize_t pos, rpl_is_char_class_fun_t *delim, char quote)
+{
+	/// Ignore quotes
+	if (quote == '\0') return get_word(input, pos, delim);
+
+	lex_t quotes = lex_quote(input, quote);
+	size_t len = strlen(input);
+
+	ssize_t word_start = str_find_backward(input, len, pos, delim, false);
+	debug_msg("word_start: %d\n", word_start);
+	while (word_start >=0 && in_quoted_str(&quotes, word_start)) {
+		word_start = str_find_backward(input, len, word_start, delim, true);
+		debug_msg("word_start: %d\n", word_start);
+	}
+	/// if no delim found, word_start = -1
+	word_start = word_start < 0 ? 0 : word_start;
+	debug_msg("word_start: %d\n", word_start);
+
+	ssize_t word_stop = str_find_forward(input, len, pos, delim, false);
+	debug_msg("word_stop: %d\n", word_stop);
+	while (word_stop >=0 && in_quoted_str(&quotes, word_stop)) {
+		word_stop = str_find_forward(input, len, word_stop, delim, true);
+		debug_msg("word_stop: %d\n", word_stop);
+	}
+	/// if no delim found, word_stop = -1
+	word_stop = word_stop < 0 ? len : word_stop;
+	debug_msg("word_stop: %d\n", word_stop);
+
+	stringview_t ret = { .start = (char *)input + word_start, .stop = (char *)input + word_stop };
+	return ret;
+}
+
+
+/*
+  Function get_word_from_view() returns a string view that covers the word where the cursor (pos) is in.
+  Paramters
+    input: string view that will be parsed
+    pos: cursor position
+    delim: function that defines the word boundary characters
+*/
 stringview_t
 get_word_from_view(stringview_t input, ssize_t pos, rpl_is_char_class_fun_t *delim)
 {
@@ -361,6 +450,27 @@ get_word_from_view(stringview_t input, ssize_t pos, rpl_is_char_class_fun_t *del
 	word_stop = word_stop < 0 ? input.stop - input.start : word_stop;
 	stringview_t ret = { .start = input.start + word_start, .stop = input.start + word_stop };
 	return ret;
+}
+
+
+void
+get_str_from_view(char *str, stringview_t view)
+{
+	snprintf(str, view.stop - view.start + 1, "%s", view.start);
+}
+
+
+void
+get_unquoted_str_from_view(char *str, stringview_t view, char quote)
+{
+	int j = 0;
+	for(int i = 0; i < view.stop - view.start; i++) {
+		char c = *(view.start + i);
+		if (c == quote) continue;
+		str[j] = c;
+		j++;
+	}
+	str[j] = '\0';
 }
 
 
@@ -378,6 +488,10 @@ get_first_diffchar(const char *first, const char *second)
 }
 
 
+typedef struct path_s {
+} path_t;
+
+
 #define RPL_MAX_PREFIX  (256)
 
 static void
@@ -387,29 +501,75 @@ filename_completer(rpl_env_t *env, editor_t *eb)
 	if (input == NULL)
 		return;
 	ssize_t pos = eb->pos;
-	/// New way to find the boundaries for cutting out and replacing the word to be
-	/// completed.
-	stringview_t word = get_word(input, pos, rpl_char_is_white);
-	stringview_t fname_prefix = get_word_from_view(word, word.stop - word.start,
-	                                          rpl_char_is_dir_separator);
-	ssize_t fname_prefix_len = fname_prefix.stop - fname_prefix.start;
-	stringview_t dirname = { .start = word.start, .stop = fname_prefix.start };
-	env->completions->cut_start = fname_prefix.start - input;
-	env->completions->cut_stop = fname_prefix.stop - input;
 
-	char word_str[RPL_MAX_PREFIX];
-	snprintf(word_str, word.stop - word.start + 1, "%s", word.start);
-	char fname_prefix_str[RPL_MAX_PREFIX];
-	snprintf(fname_prefix_str, fname_prefix_len + 1, "%s", fname_prefix.start);
+	/*
+	  Find the boundaries of the word under the cursor in the input string,
+	  and split it up into directory part and filename prefix.
+	  Example:
+	    % ls /home/foo/b
+	    word = "/home/foo/b", fname_prefix = "b", dirname = "/home/foo/"
+	  The fname_prefix then should eventually be completed by cutting it out
+	  and replacing it by the completion.
+	*/
+	const char rc_shell_quote_char = '\'';
+	/// Old word_str is replaced by ...
+	// char word_str[RPL_MAX_PREFIX] = {0};
+	/// ... the quoted word from the input and the unquoted plain string
+	char word_str[RPL_MAX_PREFIX] = {0};
 	char dirname_str[RPL_MAX_PREFIX] = {0};
+	char fname_prefix_str[RPL_MAX_PREFIX] = {0};
+
+	char plain_word_str[RPL_MAX_PREFIX] = {0};
+	char plain_dirname_str[RPL_MAX_PREFIX] = {0};
+	char plain_fname_prefix_str[RPL_MAX_PREFIX] = {0};
+
+	// stringview_t word = get_word(input, pos, rpl_char_is_white);
+	stringview_t quoted_word = get_quoted_word(input, pos, rpl_char_is_white, rc_shell_quote_char);
+	// get_str_from_view(word_str, word);
+	get_str_from_view(word_str, quoted_word);
+	get_unquoted_str_from_view(plain_word_str, quoted_word, rc_shell_quote_char);
+	debug_msg("word: %s\n" "plain word: %s\n", word_str, plain_word_str);
+	/// Search directory separator from the end of the word
+	// stringview_t fname_prefix = get_word_from_view(word, word.stop - word.start,
+	                                          // rpl_char_is_dir_separator);
+	// stringview_t fname_prefix = get_word_from_view(plain_word, plain_word.stop - plain_word.start,
+	                                          // rpl_char_is_dir_separator);
+	stringview_t fname_prefix = get_word(word_str, strlen(word_str),
+	  rpl_char_is_dir_separator);
+	stringview_t plain_fname_prefix = get_word(plain_word_str, strlen(plain_word_str),
+	  rpl_char_is_dir_separator);
+	get_str_from_view(fname_prefix_str, fname_prefix);
+	get_str_from_view(plain_fname_prefix_str, plain_fname_prefix);
+	ssize_t fname_prefix_len = fname_prefix.stop - fname_prefix.start;
+	ssize_t plain_fname_prefix_len = plain_fname_prefix.stop - plain_fname_prefix.start;
+	// stringview_t dirname = { .start = word.start, .stop = fname_prefix.start };
+	// stringview_t dirname = { .start = word_str, .stop = fname_prefix.start };
+	stringview_t dirname = { .start = word_str, .stop = fname_prefix.start };
+	stringview_t plain_dirname = { .start = plain_word_str, .stop = plain_fname_prefix.start };
 	if (dirname.start == dirname.stop) {
+		/// Empty dirname which means ./
 		dirname_str[0] = '.';
 		dirname_str[1] = rpl_dirsep();
 	} else {
-		snprintf(dirname_str, dirname.stop - dirname.start + 1, "%s", dirname.start);
+		get_str_from_view(dirname_str, dirname);
 	}
-	// printf("rest input: \"%s\", word: \"%s\", dirname: \"%s\", fname_prefix: \"%s\"\n",
-	      // input + pos, word_str, dirname_str, fname_prefix_str);
+	if (plain_dirname.start == plain_dirname.stop) {
+		/// Empty plain_dirname which means ./
+		plain_dirname_str[0] = '.';
+		plain_dirname_str[1] = rpl_dirsep();
+	} else {
+		get_str_from_view(plain_dirname_str, plain_dirname);
+	}
+	debug_msg("rest input: \"%s\", word: \"%s\", dirname: \"%s\", fname_prefix: \"%s\"\n",
+	      input + pos, word_str, dirname_str, fname_prefix_str);
+	debug_msg("plain word: \"%s\", dirname: \"%s\", fname_prefix: \"%s\"\n",
+	      plain_word_str, plain_dirname_str, plain_fname_prefix_str);
+	/// Note that fname_prefix refers to word_str and not input
+	// env->completions->cut_start = fname_prefix.start - input;
+	// env->completions->cut_stop = fname_prefix.stop - input;
+	env->completions->cut_start = (fname_prefix.start - word_str) + (quoted_word.start - input);
+	env->completions->cut_stop = (fname_prefix.stop - word_str) + (quoted_word.start - input);
+	debug_msg("cut start: %d, stop: %d\n", env->completions->cut_start, env->completions->cut_stop);
 
 	dir_cursor d = 0;
 	dir_entry entry;
@@ -417,17 +577,17 @@ filename_completer(rpl_env_t *env, editor_t *eb)
 	bool first = true;
 	char pref_intersec[RPL_MAX_PREFIX] = {0};
 	ssize_t diffchar = RPL_MAX_PREFIX;
-	if (os_findfirst(env->mem, dirname_str, &d, &entry)) {
+	if (os_findfirst(env->mem, plain_dirname_str, &d, &entry)) {
 		do {
 			const char *fname = os_direntry_name(&entry);
 			// printf("dir entry: \"%s\"\n", fname);
 			if (fname != NULL &&
 			    strcmp(fname, ".") != 0 &&
 			    strcmp(fname, "..") != 0 &&
-			    strlen(fname) >= fname_prefix_len &&
-			    strncmp(fname, fname_prefix.start, fname_prefix_len) == 0)
+			    strlen(fname) >= plain_fname_prefix_len &&
+			    strncmp(fname, plain_fname_prefix.start, plain_fname_prefix_len) == 0)
 			{
-				/// Update common prefix
+				/// Update common prefix, by intersecting all filenames in the current directory
 				if (first) {
 					first = false;
 					strcpy(pref_intersec, fname);
@@ -441,15 +601,15 @@ filename_completer(rpl_env_t *env, editor_t *eb)
 				stringbuf_t *fname_str = sbuf_new(env->mem);
 				sbuf_append(fname_str, fname);
 				char full_path[2 * RPL_MAX_PREFIX];
-				sprintf(full_path, "%s%s", dirname_str, fname);
-				if (os_is_dir(full_path)) {
-					sbuf_append_char(fname_str, rpl_dirsep());
-				}
-				if (str_find_forward(fname, strlen(fname), 0, &rpl_char_is_white, true) > 0 ||
-				    str_find_forward(fname, strlen(fname), 0, &rpl_char_is_rc_shell_operator, true) > 0) {
+				sprintf(full_path, "%s%s", plain_dirname_str, fname);
+				/// Quote the file name if it contains a shell operator char (including whitespace)
+				if (str_find_forward(fname, strlen(fname), 0, &rpl_char_is_rc_shell_operator, true) > 0) {
 					sbuf_insert_char_at(fname_str, '\'', 0);
 					sbuf_append_char(fname_str, '\'');
 				};
+				if (os_is_dir(full_path)) {
+					sbuf_append_char(fname_str, rpl_dirsep());
+				}
 				cont = completions_add(env->completions,
 				                      sbuf_string(fname_str), sbuf_string(fname_str),
 				                      help);
