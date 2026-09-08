@@ -574,6 +574,7 @@ editor_append_hint_help(editor_t * eb, const char *help)
 	}
 }
 
+/*
 // refresh with possible hint
 static void
 edit_refresh_hint(rpl_env_t * env, editor_t * eb)
@@ -602,6 +603,7 @@ edit_refresh_hint(rpl_env_t * env, editor_t * eb)
 	}
 	debug_msg("edit_refresh_hint(), hint on return: '%s'\n", sbuf_string(eb->hint));
 }
+*/
 
 static void
 edit_refresh_history_hint(rpl_env_t *env, editor_t *eb)
@@ -1022,7 +1024,7 @@ edit_insert_unicode(rpl_env_t * env, editor_t * eb, unicode_t u)
 	ssize_t nextpos = sbuf_insert_unicode_at(eb->input, u, eb->pos);
 	if (nextpos >= 0)
 		eb->pos = nextpos;
-	edit_refresh_hint(env, eb);
+	// edit_refresh_hint(env, eb);
 }
 
 static void
@@ -1084,7 +1086,7 @@ edit_insert_char(rpl_env_t * env, editor_t * eb, char c)
 	if (c == '\n') {
 		editor_auto_indent(eb, "{", "}");   // todo: custom auto indent tokens?
 	}
-	edit_refresh_hint(env, eb);
+	// edit_refresh_hint(env, eb);
 }
 
 /// character wise cursor moves to first position when reaching last
